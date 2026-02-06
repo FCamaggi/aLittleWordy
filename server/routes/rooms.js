@@ -73,7 +73,7 @@ router.post('/', async (req, res) => {
     
     await newRoom.save();
     
-    res.status(201).json(newRoom);
+    res.status(201).json({ roomCode: newRoom.code, room: newRoom });
   } catch (error) {
     console.error('Error creating room:', error);
     res.status(500).json({ error: 'Failed to create room' });

@@ -66,7 +66,7 @@ class SocketService {
   }
 
   // Room Management
-  async createRoom(playerName: string): Promise<{ roomCode: string }> {
+  async createRoom(playerName: string): Promise<{ roomCode: string; room?: any }> {
     const response = await fetch(`${this.serverUrl}/api/rooms`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

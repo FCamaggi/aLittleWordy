@@ -261,18 +261,30 @@ export default function App() {
 
   const handleCreateRoom = async (playerName: string) => {
     try {
-      const { roomCode } = await socketService.createRoom(playerName);
+      const result = await socketService.createRoom(playerName);
+      const roomCode = result.roomCode || result.code;
+      
+      if (!roomCode) {
+        console.error('No roomCode received:', result);
+        showNotification('Error: No se recibió código de sala');
+        return;
+      }
+      
+      console.log('Room created with code:', roomCode);
       
       // Wait for socket to be connected
       const socket = socketService.getSocket();
       if (socket && socket.connected) {
+        console.log('Socket already connected, joining room');
         socketService.joinRoomSocket(roomCode, playerName);
       } else {
+        console.log('Waiting for socket connection...');
         // Wait for connection
         const checkConnection = setInterval(() => {
           const s = socketService.getSocket();
           if (s && s.connected) {
             clearInterval(checkConnection);
+            console.log('Socket connected, joining room');
             socketService.joinRoomSocket(roomCode, playerName);
           }
         }, 100);
@@ -290,18 +302,22 @@ export default function App() {
 
   const handleJoinRoom = async (roomCode: string, playerName: string) => {
     try {
+      console.log('Joining room:', roomCode, 'as', playerName);
       await socketService.joinRoom(roomCode, playerName);
       
       // Wait for socket to be connected
       const socket = socketService.getSocket();
       if (socket && socket.connected) {
+        console.log('Socket already connected, joining room');
         socketService.joinRoomSocket(roomCode, playerName);
       } else {
+        console.log('Waiting for socket connection...');
         // Wait for connection
         const checkConnection = setInterval(() => {
           const s = socketService.getSocket();
           if (s && s.connected) {
             clearInterval(checkConnection);
+            console.log('Socket connected, joining room');
             socketService.joinRoomSocket(roomCode, playerName);
           }
         }, 100);
