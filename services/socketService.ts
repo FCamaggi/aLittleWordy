@@ -26,7 +26,13 @@ class SocketService {
   private serverUrl: string;
 
   constructor() {
-    this.serverUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+    // Use environment variable or detect based on hostname
+    const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const prodUrl = 'https://alittlewordy-server.onrender.com';
+    const devUrl = 'http://localhost:5000';
+    
+    this.serverUrl = import.meta.env.VITE_SOCKET_URL || (isDev ? devUrl : prodUrl);
+    console.log('🔌 Socket URL:', this.serverUrl, '| Dev mode:', isDev);
   }
 
   connect(): Socket<ServerToClientEvents, ClientToServerEvents> {
