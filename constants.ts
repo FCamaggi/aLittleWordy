@@ -218,6 +218,14 @@ export const CARDS: Card[] = [
     cost: 1,
     type: 'spicy',
   },
+  {
+    id: 'iago',
+    name: 'Iago',
+    flavor: 'Rima',
+    description: 'Tu oponente debe decir una palabra que rime con su palabra secreta.',
+    cost: 5,
+    type: 'spicy',
+  },
 ];
 
 export const BOT_WORDS = [

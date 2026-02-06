@@ -38,6 +38,9 @@ export function setupSocketHandlers(io) {
         // CRITICAL: Join socket room FIRST
         socket.join(room.code);
         
+        // Small delay to ensure join completes on slow connections
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
         console.log(`✅ ${playerName} joined room ${roomCode}`);
 
         // THEN notify player (must be after join)
@@ -165,6 +168,9 @@ export function setupSocketHandlers(io) {
           room.gameState.history = ['¡Intercambio realizado! Comienza el juego.'];
 
           await room.save();
+
+          // Small delay before emitting to ensure DB write completes
+          await new Promise(resolve => setTimeout(resolve, 100));
 
           console.log(`✅ Game started in room ${roomCode}, emitting to all players in room`);
           io.to(room.code).emit('game_started', { room });

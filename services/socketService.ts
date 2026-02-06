@@ -122,6 +122,9 @@ class SocketService {
       console.error('Join room failed:', error);
       throw new Error(error.error || error.message || 'Error al unirse a sala');
     }
+
+    // Small delay to let backend process complete
+    await new Promise(resolve => setTimeout(resolve, 100));
   }
 
   // Game Actions
