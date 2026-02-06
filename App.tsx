@@ -4,11 +4,14 @@ import { GameState, GamePhase, Tile as TileType, Card as CardType } from './type
 import { CARDS } from './constants';
 import { generateDeck, generateTiles, getBotWordAndTiles, scrambleTiles, getNewTile } from './services/gameLogic';
 import { isValidWord, getValidationMessage } from './services/dictionary';
+import { socketService } from './services/socketService';
 import { Button } from './components/Button';
 import { Tile } from './components/Tile';
 import { Card } from './components/Card';
 import { ManualModal } from './components/ManualModal';
 import { EventModal, EventModalProps } from './components/EventModal';
+import { MainMenu } from './components/MainMenu';
+import { Lobby } from './components/Lobby';
 
 const INITIAL_STATE: GameState = {
   phase: GamePhase.MENU,
@@ -50,10 +53,12 @@ export default function App() {
   const [manualOpen, setManualOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   
-  // Menu State
-  const [playerName, setPlayerName] = useState('');
-  const [joinCode, setJoinCode] = useState('');
-  const [isJoining, setIsJoining] = useState(false);
+  // Multiplayer State
+  const [isConnected, setIsConnected] = useState(false);
+  const [playerId, setPlayerId] = useState<string | null>(null);
+  const [isHost, setIsHost] = useState(false);
+  const [players, setPlayers] = useState<Array<{ name: string; ready: boolean }>>([]);
+  const [localPlayerReady, setLocalPlayerReady] = useState(false);
   
   // Setup State
   const [setupWord, setSetupWord] = useState('');
@@ -68,11 +73,153 @@ export default function App() {
   // Notifications
   const [notification, setNotification] = useState<string | null>(null);
 
+  // --- Socket.io Setup ---
+
+  useEffect(() => {
+    const socket = socketService.connect();
+    setIsConnected(true);
+
+    // Joined room event
+    socket.on('joined_room', (data) => {
+      setPlayerId(data.playerId);
+      const room = data.room;
+      
+      setGame(prev => ({
+        ...prev,
+        phase: GamePhase.LOBBY,
+        roomCode: room.code,
+        player: {
+          ...prev.player,
+          name: room.players.find((p: any) => p.socketId === socket.id)?.name || prev.player.name
+        }
+      }));
+
+      updatePlayersFromRoom(room);
+    });
+
+    // Player joined
+    socket.on('player_joined', (data) => {
+      showNotification('¡Un jugador se ha unido!');
+      // Refetch room data
+      if (game.roomCode) {
+        socketService.getRoom(game.roomCode).then(room => {
+          updatePlayersFromRoom(room);
+        });
+      }
+    });
+
+    // Player ready updated
+    socket.on('player_ready_updated', (data) => {
+      // Room will be updated, refetch or update local state
+    });
+
+    // Game starting (both players ready)
+    socket.on('game_starting', () => {
+      setGame(prev => ({ ...prev, phase: GamePhase.SETUP }));
+      const tiles = generateTiles();
+      setSetupTiles(tiles);
+      setSetupWord('');
+      setSwapsRemaining(2);
+    });
+
+    // Word submitted
+    socket.on('word_submitted', (data) => {
+      showNotification('Palabra enviada');
+    });
+
+    // Game started (both words submitted, game begins)
+    socket.on('game_started', (data) => {
+      const room = data.room;
+      updateGameStateFromRoom(room);
+    });
+
+    // Card used
+    socket.on('card_used', (data) => {
+      const room = data.room;
+      updateGameStateFromRoom(room);
+    });
+
+    // Guess made
+    socket.on('guess_made', (data) => {
+      const room = data.room;
+      updateGameStateFromRoom(room);
+      
+      if (data.victory) {
+        // Handle victory
+      }
+      if (data.scenario2) {
+        // Handle scenario 2
+      }
+    });
+
+    // Error
+    socket.on('error', (message) => {
+      showNotification(`Error: ${message}`);
+    });
+
+    return () => {
+      socketService.disconnect();
+      setIsConnected(false);
+    };
+  }, []);
+
+  const updatePlayersFromRoom = (room: any) => {
+    const playerList = room.players.map((p: any) => ({
+      name: p.name,
+      ready: p.ready
+    }));
+    setPlayers(playerList);
+    
+    const socket = socketService.getSocket();
+    const me = room.players.find((p: any) => p.socketId === socket?.id);
+    if (me) {
+      setLocalPlayerReady(me.ready);
+      setIsHost(room.players[0].socketId === socket?.id);
+    }
+  };
+
+  const updateGameStateFromRoom = (room: any) => {
+    // Convert room data to game state
+    const socket = socketService.getSocket();
+    const myPlayerData = room.players.find((p: any) => p.socketId === socket?.id);
+    const opponentData = room.players.find((p: any) => p.socketId !== socket?.id);
+
+    if (!myPlayerData || !opponentData) return;
+
+    setGame(prev => ({
+      ...prev,
+      phase: room.phase === 'GAME_LOOP' ? GamePhase.GAME_LOOP : prev.phase,
+      turn: room.currentTurn === myPlayerData.socketId ? 'player' : 'opponent',
+      player: {
+        ...prev.player,
+        name: myPlayerData.name,
+        tiles: myPlayerData.tiles || prev.player.tiles,
+        secretWord: myPlayerData.secretWord || '',
+        tokens: myPlayerData.tokens || 0,
+        guesses: myPlayerData.guesses || [],
+        hasGuessedCorrectly: myPlayerData.hasGuessedCorrectly || false,
+        revealedLetters: prev.player.revealedLetters,
+        revealedPositions: prev.player.revealedPositions,
+      },
+      opponent: {
+        ...prev.opponent,
+        name: opponentData.name,
+        tiles: opponentData.tiles || prev.opponent.tiles,
+        tokens: opponentData.tokens || 0,
+        guesses: opponentData.guesses || [],
+        hasGuessedCorrectly: opponentData.hasGuessedCorrectly || false,
+        revealedLetters: prev.opponent.revealedLetters,
+        revealedPositions: prev.opponent.revealedPositions,
+      },
+      activeCards: room.deck || prev.activeCards,
+    }));
+  };
+
   // --- Effects ---
 
-  // Bot Turn Logic
+  // Bot Turn Logic (only for demo mode with bot)
   useEffect(() => {
-    if (game.phase === GamePhase.GAME_LOOP && game.turn === 'opponent' && !game.winner && !game.waitingForOpponentGuess && !eventModal.isOpen) {
+    if (game.opponent.isBot && game.phase === GamePhase.GAME_LOOP && game.turn === 'opponent' && !game.winner && !game.waitingForOpponentGuess && !eventModal.isOpen) {
       const timer = setTimeout(() => {
         executeBotTurn();
       }, 2000);
@@ -80,9 +227,9 @@ export default function App() {
     }
   }, [game.phase, game.turn, game.waitingForOpponentGuess, eventModal.isOpen]);
 
-  // Scenario 2 Logic
+  // Scenario 2 Logic (only for bot demo)
   useEffect(() => {
-    if (game.phase === GamePhase.GAME_LOOP && game.waitingForOpponentGuess && !game.winner && !eventModal.isOpen) {
+    if (game.opponent.isBot && game.phase === GamePhase.GAME_LOOP && game.waitingForOpponentGuess && !game.winner && !eventModal.isOpen) {
       const timer = setTimeout(() => {
         executeBotTurn();
       }, 1500);
@@ -112,12 +259,46 @@ export default function App() {
     return currentState;
   };
 
-  const createGame = () => {
-    if (!playerName.trim()) {
-      showNotification("Por favor ingresa tu nombre");
-      return;
+  const handleCreateRoom = async (playerName: string) => {
+    try {
+      const { roomCode } = await socketService.createRoom(playerName);
+      socketService.joinRoomSocket(roomCode, playerName);
+      setIsHost(true);
+    } catch (error) {
+      showNotification('Error al crear sala');
+      console.error(error);
     }
+  };
 
+  const handleJoinRoom = async (roomCode: string, playerName: string) => {
+    try {
+      await socketService.joinRoom(roomCode, playerName);
+      socketService.joinRoomSocket(roomCode, playerName);
+      setIsHost(false);
+    } catch (error: any) {
+      showNotification(error.message || 'Error al unirse a sala');
+      console.error(error);
+    }
+  };
+
+  const handlePlayerReady = () => {
+    if (game.roomCode) {
+      socketService.setReady(game.roomCode);
+      setLocalPlayerReady(true);
+    }
+  };
+
+  const handleLeaveRoom = () => {
+    setGame(INITIAL_STATE);
+    setPlayers([]);
+    setLocalPlayerReady(false);
+    setIsHost(false);
+    socketService.disconnect();
+    socketService.connect();
+  };
+
+  // Bot demo mode functions
+  const createGame = () => {
     const code = Math.random().toString(36).substring(2, 6).toUpperCase();
     const botData = getBotWordAndTiles();
     
@@ -125,7 +306,7 @@ export default function App() {
       ...INITIAL_STATE,
       phase: GamePhase.LOBBY,
       roomCode: code,
-      player: { ...INITIAL_STATE.player, name: playerName },
+      player: { ...INITIAL_STATE.player, name: 'Jugador' },
       opponent: {
         ...INITIAL_STATE.opponent,
         originalTiles: botData.tiles,
@@ -135,24 +316,14 @@ export default function App() {
   };
 
   const joinGame = () => {
-    if (!playerName.trim()) {
-      showNotification("Por favor ingresa tu nombre");
-      return;
-    }
-    if (!joinCode.trim() || joinCode.length < 4) {
-      showNotification("Ingresa un código válido (4 letras)");
-      return;
-    }
-
-    // Simulacion de Unirse (En una app real conectaría a la DB)
     const botData = getBotWordAndTiles();
-    const tiles = generateTiles(); // Mis fichas
+    const tiles = generateTiles();
     setSetupTiles(tiles);
 
     setGame({
       ...INITIAL_STATE,
       phase: GamePhase.SETUP,
-      roomCode: joinCode.toUpperCase(),
+      roomCode: 'DEMO',
       player: { ...INITIAL_STATE.player, name: playerName, originalTiles: tiles },
       opponent: {
         ...INITIAL_STATE.opponent,
@@ -197,6 +368,14 @@ export default function App() {
       return;
     }
 
+    // Multiplayer mode: send word to server
+    if (game.roomCode && !game.opponent.isBot) {
+      socketService.submitWord(game.roomCode, setupWord.toUpperCase());
+      showNotification('Palabra enviada. Esperando al oponente...');
+      return;
+    }
+
+    // Bot demo mode: continue with local logic
     setGame(prev => ({
       ...prev,
       phase: GamePhase.GAME_LOOP,
@@ -204,11 +383,11 @@ export default function App() {
       player: {
         ...prev.player,
         secretWord: setupWord.toUpperCase(),
-        tiles: scrambleTiles(prev.opponent.originalTiles) // Scramble tiles received from bot
+        tiles: scrambleTiles(prev.opponent.originalTiles)
       },
       opponent: {
         ...prev.opponent,
-        tiles: scrambleTiles(prev.player.originalTiles) // Scramble tiles sent to bot
+        tiles: scrambleTiles(prev.player.originalTiles)
       },
       history: ["¡Intercambio realizado! Comienza el juego."]
     }));
@@ -308,6 +487,17 @@ export default function App() {
   const resolveCardAction = (card: CardType, input?: string) => {
     closeEventModal(); // Close input modal if open
 
+    // Multiplayer mode: send card action to server
+    if (game.roomCode && !game.opponent.isBot) {
+      const cardIndex = game.activeCards.findIndex(c => c.id === card.id);
+      if (cardIndex !== -1) {
+        socketService.useCard(game.roomCode, cardIndex);
+        showNotification(`Usando ${card.name}...`);
+      }
+      return;
+    }
+
+    // Bot demo mode: continue with local logic
     let cost = typeof card.cost === 'number' ? card.cost : 0;
     let resultMessage = '';
     const opponentWord = game.opponent.secretWord;
@@ -577,6 +767,14 @@ export default function App() {
       return;
     }
     
+    // Multiplayer mode: send guess to server
+    if (game.roomCode && !game.opponent.isBot) {
+      socketService.guessWord(game.roomCode, word.toUpperCase());
+      showNotification('Intento enviado...');
+      return;
+    }
+
+    // Bot demo mode: continue with local logic
     const isCorrect = word.toUpperCase() === game.opponent.secretWord;
     
     if (isCorrect) {
@@ -698,92 +896,34 @@ export default function App() {
 
   // --- Render Helpers ---
 
-  const renderLobby = () => (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4 space-y-8 bg-slate-100 animate-in fade-in">
-      <div className="text-center space-y-2">
-        <h1 className="text-4xl md:text-5xl font-black text-indigo-900 tracking-tight">A Little Wordy</h1>
-        <p className="text-lg text-slate-600">Juego de palabras y pistas.</p>
-      </div>
-      
-      {game.phase === GamePhase.MENU ? (
-        <div className="w-full max-w-sm bg-white p-6 rounded-2xl shadow-xl space-y-6">
-          {!isJoining ? (
-            <>
-               <div>
-                  <label className="block text-sm font-bold text-slate-500 uppercase mb-2">Tu Nombre</label>
-                  <input 
-                    type="text" 
-                    value={playerName} 
-                    onChange={e => setPlayerName(e.target.value)}
-                    placeholder="Ej: Jugador 1"
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-indigo-500 outline-none font-medium"
-                  />
-               </div>
-               
-               <div className="space-y-3">
-                 <Button onClick={createGame} className="w-full h-14 text-lg bg-indigo-600">
-                   <Play className="inline mr-2 w-5 h-5" /> Crear Partida
-                 </Button>
-                 <Button onClick={() => setIsJoining(true)} variant="secondary" className="w-full h-12">
-                   <Users className="inline mr-2 w-5 h-5" /> Unirse a Sala
-                 </Button>
-               </div>
-               
-               <Button variant="ghost" onClick={() => setManualOpen(true)} className="w-full">
-                 <BookOpen className="inline mr-2 w-5 h-5" /> Reglas
-               </Button>
-            </>
-          ) : (
-            <>
-               <button onClick={() => setIsJoining(false)} className="text-indigo-600 font-bold flex items-center mb-4 hover:underline">
-                 <ChevronLeft className="w-4 h-4 mr-1" /> Volver
-               </button>
-               <h3 className="text-xl font-bold text-slate-800">Unirse a Partida</h3>
-               <div>
-                  <label className="block text-sm font-bold text-slate-500 uppercase mb-2">Código de Sala</label>
-                  <input 
-                    type="text" 
-                    value={joinCode} 
-                    onChange={e => setJoinCode(e.target.value.toUpperCase())}
-                    placeholder="Ej: A1B2"
-                    maxLength={4}
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-indigo-500 outline-none font-black tracking-widest text-center uppercase text-xl"
-                  />
-               </div>
-               <Button onClick={joinGame} className="w-full h-12">
-                 Entrar
-               </Button>
-            </>
-          )}
-        </div>
-      ) : (
-        <div className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md text-center space-y-6 animate-in zoom-in">
-           <h2 className="text-2xl font-bold text-slate-800">Sala Creada</h2>
-           <div className="bg-indigo-50 rounded-xl p-4 border-2 border-indigo-100">
-             <p className="text-xs font-bold text-indigo-400 uppercase tracking-wide">Código de Acceso</p>
-             <div className="text-5xl font-black text-indigo-600 tracking-widest py-2">
-                {game.roomCode}
-             </div>
-           </div>
-           
-           <div className="space-y-2">
-             <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
-               <span className="font-medium text-slate-700">{game.player.name} (Tú)</span>
-               <CheckCircle className="w-5 h-5 text-green-500" />
-             </div>
-             <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 opacity-60">
-                <span className="font-medium text-slate-700">Esperando Oponente...</span>
-                <span className="animate-pulse w-3 h-3 bg-slate-300 rounded-full"></span>
-             </div>
-           </div>
-
-           <Button fullWidth onClick={startSetup} className="h-12 text-lg">
-             Jugar vs Bot (Demo)
-           </Button>
-        </div>
-      )}
-    </div>
-  );
+  const renderLobby = () => {
+    if (game.phase === GamePhase.MENU) {
+      return (
+        <>
+          <MainMenu 
+            onCreateRoom={handleCreateRoom}
+            onJoinRoom={handleJoinRoom}
+          />
+          <ManualModal isOpen={manualOpen} onClose={() => setManualOpen(false)} />
+        </>
+      );
+    }
+    
+    if (game.phase === GamePhase.LOBBY) {
+      return (
+        <Lobby
+          roomCode={game.roomCode || ''}
+          players={players}
+          isHost={isHost}
+          localPlayerReady={localPlayerReady}
+          onReady={handlePlayerReady}
+          onLeave={handleLeaveRoom}
+        />
+      );
+    }
+    
+    return null;
+  };
 
   const renderSetup = () => (
     <div className="min-h-screen bg-slate-50 p-4 flex flex-col items-center justify-center">
