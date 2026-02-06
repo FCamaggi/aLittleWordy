@@ -47,7 +47,7 @@
   - `guess_word` - Adivinar palabra
   - `disconnect` - Cleanup
 - [x] **Utilidades del juego**
-  - generateRoomCode() - Códigos de 6 caracteres
+  - generateRoomCode() - Códigos de 4 caracteres
   - generateTiles() - 5 vocales + 6 consonantes
   - generateDeck() - 4 cartas aleatorias
   - shuffleArray() - Mezclar arrays

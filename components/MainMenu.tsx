@@ -34,8 +34,8 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onCreateRoom, onJoinRoom }) 
       setError('Ingresa el código de sala');
       return;
     }
-    if (roomCode.trim().length !== 6) {
-      setError('El código debe tener 6 caracteres');
+    if (roomCode.trim().length !== 4) {
+      setError('El código debe tener 4 caracteres');
       return;
     }
     onJoinRoom(roomCode.trim().toUpperCase(), playerName.trim());
@@ -182,8 +182,8 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onCreateRoom, onJoinRoom }) 
                 setRoomCode(e.target.value.toUpperCase());
                 setError('');
               }}
-              placeholder="ABC123"
-              maxLength={6}
+              placeholder="AB12"
+              maxLength={4}
               className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none text-lg font-mono tracking-wider text-center"
             />
           </div>
