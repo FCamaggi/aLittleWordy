@@ -27,7 +27,7 @@ export const Lobby: React.FC<LobbyProps> = ({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const canStart = players.length === 2 && players.every(p => p.ready);
+  const canStart = players.length === 2 && players.every((p) => p.ready);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-amber-50 to-amber-100 p-4">
@@ -35,13 +35,17 @@ export const Lobby: React.FC<LobbyProps> = ({
         {/* Header */}
         <div className="text-center mb-8">
           <Users className="w-16 h-16 mx-auto mb-4 text-amber-600" />
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Sala de Espera</h1>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+            Sala de Espera
+          </h1>
           <p className="text-gray-600">Esperando a los jugadores...</p>
         </div>
 
         {/* Room Code */}
         <div className="bg-amber-50 rounded-lg p-4 mb-6">
-          <p className="text-sm text-gray-600 mb-2 text-center">Código de Sala</p>
+          <p className="text-sm text-gray-600 mb-2 text-center">
+            Código de Sala
+          </p>
           <div className="flex items-center justify-center gap-2">
             <code className="text-3xl font-bold text-amber-700 tracking-wider">
               {roomCode}
@@ -52,7 +56,11 @@ export const Lobby: React.FC<LobbyProps> = ({
               onClick={copyRoomCode}
               className="ml-2"
             >
-              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              {copied ? (
+                <Check className="w-4 h-4" />
+              ) : (
+                <Copy className="w-4 h-4" />
+              )}
             </Button>
           </div>
           {copied && (
@@ -72,13 +80,19 @@ export const Lobby: React.FC<LobbyProps> = ({
                 className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
               >
                 <div className="flex items-center gap-2">
-                  <div className={`w-3 h-3 rounded-full ${
-                    player.ready ? 'bg-green-500' : 'bg-gray-300'
-                  }`} />
-                  <span className="font-medium text-gray-800">{player.name}</span>
+                  <div
+                    className={`w-3 h-3 rounded-full ${
+                      player.ready ? 'bg-green-500' : 'bg-gray-300'
+                    }`}
+                  />
+                  <span className="font-medium text-gray-800">
+                    {player.name}
+                  </span>
                 </div>
                 {player.ready && (
-                  <span className="text-sm text-green-600 font-medium">Listo</span>
+                  <span className="text-sm text-green-600 font-medium">
+                    Listo
+                  </span>
                 )}
               </div>
             ))}
@@ -119,11 +133,7 @@ export const Lobby: React.FC<LobbyProps> = ({
             </div>
           )}
 
-          <Button
-            variant="secondary"
-            onClick={onLeave}
-            className="w-full"
-          >
+          <Button variant="secondary" onClick={onLeave} className="w-full">
             Salir de la Sala
           </Button>
         </div>

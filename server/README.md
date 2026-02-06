@@ -19,11 +19,13 @@ npm install
 ## ⚙️ Configuración
 
 1. Copia `.env.example` a `.env`:
+
 ```bash
 cp .env.example .env
 ```
 
 2. Edita `.env` con tus credenciales:
+
 ```env
 PORT=5000
 MONGODB_URI=tu_connection_string_de_mongodb_atlas
@@ -111,7 +113,7 @@ server/
 ├── utils/
 │   └── helpers.js       # Funciones auxiliares
 ├── .env.example         # Ejemplo variables entorno
-├── .gitignore          
+├── .gitignore
 ├── package.json
 ├── README.md
 └── server.js           # Punto de entrada

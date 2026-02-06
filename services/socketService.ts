@@ -9,7 +9,12 @@ export interface ServerToClientEvents {
   word_submitted: (data: { playerId: string }) => void;
   game_started: (data: { room: any }) => void;
   card_used: (data: { room: any }) => void;
-  guess_made: (data: { room: any; correct: boolean; victory?: boolean; scenario2?: boolean }) => void;
+  guess_made: (data: {
+    room: any;
+    correct: boolean;
+    victory?: boolean;
+    scenario2?: boolean;
+  }) => void;
   error: (message: string) => void;
 }
 
@@ -22,16 +27,20 @@ export interface ClientToServerEvents {
 }
 
 class SocketService {
-  private socket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
+  private socket: Socket<ServerToClientEvents, ClientToServerEvents> | null =
+    null;
   private serverUrl: string;
 
   constructor() {
     // Use environment variable or detect based on hostname
-    const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const isDev =
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1';
     const prodUrl = 'https://alittlewordy-server.onrender.com';
     const devUrl = 'http://localhost:5000';
-    
-    this.serverUrl = import.meta.env.VITE_SOCKET_URL || (isDev ? devUrl : prodUrl);
+
+    this.serverUrl =
+      import.meta.env.VITE_SOCKET_URL || (isDev ? devUrl : prodUrl);
     console.log('🔌 Socket URL:', this.serverUrl, '| Dev mode:', isDev);
   }
 
@@ -72,7 +81,9 @@ class SocketService {
   }
 
   // Room Management
-  async createRoom(playerName: string): Promise<{ roomCode: string; room?: any }> {
+  async createRoom(
+    playerName: string,
+  ): Promise<{ roomCode: string; room?: any }> {
     const response = await fetch(`${this.serverUrl}/api/rooms`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -97,11 +108,14 @@ class SocketService {
   }
 
   async joinRoom(roomCode: string, playerName: string): Promise<void> {
-    const response = await fetch(`${this.serverUrl}/api/rooms/${roomCode}/join`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ playerName }),
-    });
+    const response = await fetch(
+      `${this.serverUrl}/api/rooms/${roomCode}/join`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ playerName }),
+      },
+    );
 
     if (!response.ok) {
       const error = await response.json();

@@ -38,12 +38,14 @@
    - **Plan**: `Free`
 
 6. **Environment Variables** (Variables de Entorno):
+
    ```
    NODE_ENV=production
    MONGODB_URI=mongodb+srv://user:pass@cluster0.xxxxx.mongodb.net/alittlewordy?retryWrites=true&w=majority
    CORS_ORIGIN=https://tu-app.netlify.app
    PORT=10000
    ```
+
    ⚠️ **Importante**: `CORS_ORIGIN` debe ser la URL de tu frontend en Netlify (la configurarás más abajo)
 
 7. Haz clic en **Create Web Service**
@@ -71,6 +73,7 @@ Render automáticamente hará deploy cada vez que hagas push a la rama `main`.
 #### Opción A: Deploy Manual (Rápido)
 
 1. Construye el proyecto:
+
    ```bash
    npm run build
    ```
@@ -121,19 +124,23 @@ Render automáticamente hará deploy cada vez que hagas push a la rama `main`.
 ## 🐛 Troubleshooting
 
 ### Error: "Failed to fetch"
+
 - Verifica que el backend esté funcionando: `https://tu-backend.onrender.com/health`
 - Debe responder: `{"status":"ok"}`
 
 ### Error: "CORS policy"
+
 - Verifica que `CORS_ORIGIN` en Render tenga la URL correcta de Netlify
 - No incluyas `/` al final: ❌ `https://app.netlify.app/` ✅ `https://app.netlify.app`
 
 ### Backend se duerme (Free tier)
+
 - Render pone el servidor en sleep después de 15 minutos sin actividad
 - La primera solicitud tardará ~30 segundos en despertar
 - Considera usar un servicio de "ping" para mantenerlo despierto
 
 ### MongoDB Atlas dice "IP not whitelisted"
+
 - Ve a Network Access en Atlas
 - Asegúrate de tener `0.0.0.0/0` agregado
 
@@ -142,17 +149,21 @@ Render automáticamente hará deploy cada vez que hagas push a la rama `main`.
 ## 📊 Monitoreo
 
 ### Logs del Backend (Render)
+
 1. Ve a tu servicio en Render
 2. Haz clic en **Logs**
 3. Verás todos los eventos en tiempo real
 
 ### Logs del Frontend (Netlify)
+
 1. Ve a tu sitio en Netlify
 2. **Deploys** → Selecciona un deploy
 3. Haz clic en **Deploy log**
 
 ### Consola del Navegador
+
 Abre DevTools (F12) para ver:
+
 - Conexión Socket.io
 - Errores de red
 - Estado del juego
@@ -188,17 +199,20 @@ Abre DevTools (F12) para ver:
 Para una versión más robusta:
 
 1. **Rate Limiting** (limitar peticiones):
+
    ```bash
    cd server
    npm install express-rate-limit
    ```
 
 2. **Helmet** (headers de seguridad):
+
    ```bash
    npm install helmet
    ```
 
 3. **Validación de inputs**:
+
    ```bash
    npm install express-validator
    ```

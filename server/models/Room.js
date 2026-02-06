@@ -45,7 +45,7 @@ const RoomSchema = new mongoose.Schema({
   players: {
     type: [PlayerSchema],
     validate: {
-      validator: function(v) {
+      validator: function (v) {
         return v.length <= 2;
       },
       message: 'A room can have a maximum of 2 players'
@@ -80,7 +80,7 @@ RoomSchema.index({ code: 1 });
 RoomSchema.index({ lastActivity: 1 });
 
 // Update lastActivity on any modification
-RoomSchema.pre('save', function(next) {
+RoomSchema.pre('save', function (next) {
   this.lastActivity = new Date();
   next();
 });

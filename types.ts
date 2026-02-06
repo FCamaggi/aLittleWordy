@@ -3,12 +3,12 @@ export enum GamePhase {
   LOBBY = 'LOBBY',
   SETUP = 'SETUP',
   GAME_LOOP = 'GAME_LOOP',
-  GAME_OVER = 'GAME_OVER'
+  GAME_OVER = 'GAME_OVER',
 }
 
 export enum TileType {
   VOWEL = 'VOWEL',
-  CONSONANT = 'CONSONANT'
+  CONSONANT = 'CONSONANT',
 }
 
 export interface Tile {
@@ -31,7 +31,7 @@ export interface Card {
 export interface PlayerState {
   name: string;
   isBot: boolean;
-  tiles: Tile[];      // The tiles currently in front of this player (swapped in phase 2)
+  tiles: Tile[]; // The tiles currently in front of this player (swapped in phase 2)
   secretWord: string; // The word this player CREATED (which the opponent holds the tiles for)
   originalTiles: Tile[]; // The tiles this player originally drew
   tokens: number;

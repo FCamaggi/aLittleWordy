@@ -5,6 +5,7 @@
 ## ✅ Completado
 
 ### Frontend (React + TypeScript)
+
 - [x] **Todas las 16 cartas implementadas** (6 Vanilla + 10 Spicy)
   - Yakky, Woody, Calimero, Jose, Chilly, Woodstock (Vanilla)
   - Foghorn, Beaky, Daffy, Henery, Zazu, Heckle, Scuttle, Scrooge, Flit, Iago (Spicy)
@@ -26,6 +27,7 @@
   - Conexión a backend en tiempo real
 
 ### Backend (Node.js + Express + Socket.io)
+
 - [x] **Servidor Express configurado**
   - CORS configurado para frontend
   - Health check endpoint
@@ -53,6 +55,7 @@
   - shuffleArray() - Mezclar arrays
 
 ### Infraestructura
+
 - [x] **Documentación completa**
   - README.md del servidor
   - DEPLOYMENT.md con guía paso a paso
@@ -70,6 +73,7 @@
 ## 🚧 En Progreso / Pendiente
 
 ### Deploy
+
 - [ ] **MongoDB Atlas**
   - Crear cuenta y cluster gratuito
   - Configurar Network Access (0.0.0.0/0)
@@ -91,6 +95,7 @@
   - Actualizar CORS_ORIGIN en Render con URL de Netlify
 
 ### Integración Frontend ↔ Backend
+
 - [ ] **Actualizar App.tsx** para usar multiplayer
   - Eliminar lógica del bot
   - Integrar socketService
@@ -107,6 +112,7 @@
   - Esperar confirmación del servidor
 
 ### Testing
+
 - [ ] Probar flujo completo local (con MongoDB local o Atlas)
 - [ ] Probar con 2 ventanas/dispositivos
 - [ ] Verificar reconexión si se cae el socket
@@ -114,6 +120,7 @@
 - [ ] Verificar que Escenario 2 funcione correctamente
 
 ### Mejoras Futuras (Opcionales)
+
 - [ ] Sistema de salas públicas/privadas
 - [ ] Chat en juego
 - [ ] Historial de jugadas
@@ -160,6 +167,7 @@
 ## 🎯 Objetivo Final
 
 Tener un juego **A Little Wordy** completamente funcional y deployado:
+
 - ✅ Multiplayer en tiempo real
 - ✅ Todas las mecánicas del juego físico
 - ✅ UI intuitiva y responsive
@@ -182,6 +190,7 @@ Tener un juego **A Little Wordy** completamente funcional y deployado:
 ## 🐛 Problemas Conocidos
 
 Ninguno por ahora. El código compila sin errores:
+
 - ✅ Frontend build: OK
 - ✅ Backend npm install: OK
 - ⏳ Pendiente: Testing con MongoDB
@@ -191,12 +200,14 @@ Ninguno por ahora. El código compila sin errores:
 ## 💡 Notas de Desarrollo
 
 ### Decisiones de Diseño
+
 1. **Socket.io sobre WebRTC**: Más simple para este caso de uso
 2. **MongoDB sobre SQL**: Mejor para documentos JSON del estado del juego
 3. **TTL de 24h en salas**: Auto-cleanup, no se acumulan salas viejas
 4. **Free tier**: Todo gratis para MVP, escalable después
 
 ### Arquitectura
+
 ```
 Frontend (Netlify)
     ↓ Socket.io
@@ -206,6 +217,7 @@ MongoDB Atlas
 ```
 
 ### Estado del Juego Sincronizado
+
 - Backend es source of truth
 - Frontend emite acciones
 - Backend valida y actualiza

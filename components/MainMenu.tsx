@@ -7,7 +7,10 @@ interface MainMenuProps {
   onJoinRoom: (roomCode: string, playerName: string) => void;
 }
 
-export const MainMenu: React.FC<MainMenuProps> = ({ onCreateRoom, onJoinRoom }) => {
+export const MainMenu: React.FC<MainMenuProps> = ({
+  onCreateRoom,
+  onJoinRoom,
+}) => {
   const [mode, setMode] = useState<'menu' | 'create' | 'join'>('menu');
   const [playerName, setPlayerName] = useState('');
   const [roomCode, setRoomCode] = useState('');
@@ -54,7 +57,9 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onCreateRoom, onJoinRoom }) 
         <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full">
           <div className="text-center mb-8">
             <Gamepad2 className="w-20 h-20 mx-auto mb-4 text-amber-600" />
-            <h1 className="text-4xl font-bold text-gray-800 mb-2">A Little Wordy</h1>
+            <h1 className="text-4xl font-bold text-gray-800 mb-2">
+              A Little Wordy
+            </h1>
             <p className="text-gray-600">Juego de palabras multijugador</p>
           </div>
 
@@ -94,7 +99,9 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onCreateRoom, onJoinRoom }) 
         <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full">
           <div className="text-center mb-8">
             <Plus className="w-16 h-16 mx-auto mb-4 text-amber-600" />
-            <h2 className="text-3xl font-bold text-gray-800 mb-2">Crear Sala</h2>
+            <h2 className="text-3xl font-bold text-gray-800 mb-2">
+              Crear Sala
+            </h2>
             <p className="text-gray-600">Ingresa tu nombre para comenzar</p>
           </div>
 
@@ -130,11 +137,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onCreateRoom, onJoinRoom }) 
               Crear Sala
             </Button>
 
-            <Button
-              variant="secondary"
-              onClick={handleBack}
-              className="w-full"
-            >
+            <Button variant="secondary" onClick={handleBack} className="w-full">
               Volver
             </Button>
           </div>
@@ -149,7 +152,9 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onCreateRoom, onJoinRoom }) 
       <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full">
         <div className="text-center mb-8">
           <LogIn className="w-16 h-16 mx-auto mb-4 text-amber-600" />
-          <h2 className="text-3xl font-bold text-gray-800 mb-2">Unirse a Sala</h2>
+          <h2 className="text-3xl font-bold text-gray-800 mb-2">
+            Unirse a Sala
+          </h2>
           <p className="text-gray-600">Ingresa el código de sala</p>
         </div>
 
@@ -194,19 +199,11 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onCreateRoom, onJoinRoom }) 
             </div>
           )}
 
-          <Button
-            variant="primary"
-            onClick={handleJoinRoom}
-            className="w-full"
-          >
+          <Button variant="primary" onClick={handleJoinRoom} className="w-full">
             Unirse
           </Button>
 
-          <Button
-            variant="secondary"
-            onClick={handleBack}
-            className="w-full"
-          >
+          <Button variant="secondary" onClick={handleBack} className="w-full">
             Volver
           </Button>
         </div>

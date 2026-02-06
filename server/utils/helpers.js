@@ -35,9 +35,9 @@ export function shuffleArray(array) {
 export function generateTiles() {
   const VOWEL_POOL = "AAAAAAAAAAAEEEEEEEEEEEEIIIIIIOOOOOOOOOUUUUU";
   const CONSONANT_POOL = "LLLLNNNNNRRRRRSSSSSSTTTTDDDDDGGBBCCCCMMPPFFHHVYQJÑXZ";
-  
+
   const tiles = [];
-  
+
   // Generate 5 vowels
   for (let i = 0; i < 5; i++) {
     tiles.push({
@@ -48,7 +48,7 @@ export function generateTiles() {
       disabled: false
     });
   }
-  
+
   // Generate 6 consonants
   for (let i = 0; i < 6; i++) {
     tiles.push({
@@ -59,7 +59,7 @@ export function generateTiles() {
       disabled: false
     });
   }
-  
+
   return shuffleArray(tiles);
 }
 
@@ -75,7 +75,7 @@ export function generateDeck() {
     { id: 'jose', name: 'José Carioca', flavor: 'Letra a revisar', description: 'Elige letra. Dice si está en la palabra.', cost: 2, type: 'vanilla' },
     { id: 'chilly', name: 'Chilly Willy', flavor: 'Longitud exacta', description: 'Indica longitud exacta.', cost: 3, type: 'vanilla' },
     { id: 'woodstock', name: 'Woodstock', flavor: 'Última letra', description: 'Revela última letra.', cost: 1, type: 'vanilla' },
-    
+
     // Spicy
     { id: 'foghorn', name: 'Foghorn Leghorn', flavor: 'Compra vocal', description: 'Revela una vocal no revelada.', cost: 1, type: 'spicy' },
     { id: 'beaky', name: 'Beaky Buzzard', flavor: 'Número vocales', description: 'Dice cuántas vocales.', cost: 2, type: 'spicy' },
@@ -88,10 +88,10 @@ export function generateDeck() {
     { id: 'flit', name: 'Flit', flavor: 'Perla rara', description: 'Elige Z,J,Q,X,K. Dice si está.', cost: 1, type: 'spicy' },
     { id: 'iago', name: 'Iago', flavor: 'Rima', description: 'Dice palabra que rime.', cost: 5, type: 'spicy' }
   ];
-  
+
   const vanilla = CARDS.filter(c => c.type === 'vanilla');
   const spicy = CARDS.filter(c => c.type === 'spicy');
-  
+
   return [
     ...shuffleArray(vanilla).slice(0, 4),
     ...shuffleArray(spicy).slice(0, 4)

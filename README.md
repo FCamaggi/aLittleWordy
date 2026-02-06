@@ -72,6 +72,7 @@
 ## 🛠️ Tecnologías
 
 ### Frontend
+
 - **React 19** - Biblioteca UI
 - **TypeScript** - Tipado estático
 - **Vite** - Build tool ultrarrápido
@@ -79,12 +80,14 @@
 - **Lucide React** - Iconos modernos
 
 ### Backend (Próximamente)
+
 - **Node.js + Express** - Servidor API
 - **Socket.io** - Comunicación en tiempo real
 - **MongoDB Atlas** - Base de datos en la nube
 - **Mongoose** - ODM para MongoDB
 
 ### Deploy
+
 - **Netlify** - Frontend hosting
 - **Render** - Backend hosting
 
@@ -100,22 +103,26 @@
 ### Pasos
 
 1. **Clonar el repositorio**
+
 ```bash
 git clone https://github.com/tu-usuario/aLittleWordy.git
 cd aLittleWordy
 ```
 
 2. **Instalar dependencias**
+
 ```bash
 npm install
 ```
 
 3. **Ejecutar en desarrollo**
+
 ```bash
 npm run dev
 ```
 
 4. **Abrir en el navegador**
+
 ```
 http://localhost:3000
 ```
@@ -166,11 +173,13 @@ VITE_SOCKET_URL=http://localhost:5000
 En tu turno puedes:
 
 #### **Opción A: Usar una Pista**
+
 - Elige una de las 8 cartas disponibles
 - Tu oponente gana tokens (coste de la carta)
 - Obtienes información sobre su palabra
 
 **Cartas Vanilla (Fáciles):**
+
 - 🐦 **Woody Woodpecker** (4 tokens): Primera letra
 - 🐤 **Calimero** (1 token): Longitud relativa
 - 🐧 **Chilly Willy** (3 tokens): Longitud exacta
@@ -179,6 +188,7 @@ En tu turno puedes:
 - 🦆 **Yakky Doodle** (4 tokens): Eliminar letras incorrectas
 
 **Cartas Spicy (Avanzadas):**
+
 - 🦅 **Foghorn Leghorn** (1 token): Revelar una vocal
 - 🐦 **Beaky Buzzard** (2 tokens): Número de vocales
 - 🦆 **Daffy Duck** (3 tokens): Número de consonantes
@@ -191,6 +201,7 @@ En tu turno puedes:
 - 🐦 **Flit** (1 token): Verificar letra rara (Z,J,Q,X,K)
 
 #### **Opción B: Adivinar la Palabra**
+
 - Forma la palabra con tus fichas
 - **Si aciertas:**
   - ✅ Tienes MÁS tokens → **¡GANAS!**
@@ -201,6 +212,7 @@ En tu turno puedes:
 ### 3. **Escenario 2 (Desempate)**
 
 Si adivinas correctamente pero tienes menos tokens:
+
 1. Dejas de jugar
 2. Tu oponente sigue usando pistas (tú ganas sus costes)
 3. Cuando superas sus tokens → **¡GANAS!**
@@ -236,6 +248,7 @@ aLittleWordy/
 ## 🗺️ Roadmap
 
 ### Versión 1.0 (Actual - Local)
+
 - [x] Implementación completa de 16 cartas
 - [x] Sistema de fichas reveladas/deshabilitadas
 - [x] Validación de palabras español
@@ -243,6 +256,7 @@ aLittleWordy/
 - [x] Escenario 2 correctamente implementado
 
 ### Versión 2.0 (Multijugador)
+
 - [ ] Backend con Node.js + Express
 - [ ] MongoDB Atlas para persistencia
 - [ ] Socket.io para tiempo real
@@ -250,6 +264,7 @@ aLittleWordy/
 - [ ] Chat en partida
 
 ### Versión 3.0 (Mejoras)
+
 - [ ] IA del bot mejorada (3 niveles)
 - [ ] Sistema de cuentas de usuario
 - [ ] Estadísticas y rankings
@@ -257,6 +272,7 @@ aLittleWordy/
 - [ ] Torneos y modo competitivo
 
 ### Versión 4.0 (Premium)
+
 - [ ] Temas visuales personalizables
 - [ ] Modo espectador
 - [ ] Replay de partidas
@@ -286,7 +302,7 @@ aLittleWordy/
 
 ## 📄 Licencia
 
-Este proyecto es una implementación digital no oficial del juego de mesa "A Little Wordy" desarrollado por **Exploding Kittens**. 
+Este proyecto es una implementación digital no oficial del juego de mesa "A Little Wordy" desarrollado por **Exploding Kittens**.
 
 ⚠️ **Aviso Legal**: Este proyecto es solo para propósitos educativos y de entretenimiento. Todos los derechos del juego original pertenecen a sus respectivos dueños.
 
