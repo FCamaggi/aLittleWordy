@@ -79,44 +79,125 @@ export default function App() {
     const socket = socketService.connect();
     setIsConnected(true);
 
+    // Try to restore session from localStorage
+    const savedRoomCode = localStorage.getItem('alw_roomCode');
+    const savedPlayerName = localStorage.getItem('alw_playerName');
+    
+    if (savedRoomCode && savedPlayerName) {
+      console.log('Restoring session:', savedRoomCode, savedPlayerName);
+      // Try to rejoin the room
+      socketService.getRoom(savedRoomCode)
+        .then(room => {
+          // Check if player is still in the room
+          const playerExists = room.players.some((p: any) => p.name === savedPlayerName);
+          if (playerExists) {
+            setTimeout(() => {
+              socketService.joinRoomSocket(savedRoomCode, savedPlayerName);
+            }, 500);
+          } else {
+            // Clear invalid session
+            localStorage.removeItem('alw_roomCode');
+            localStorage.removeItem('alw_playerName');
+          }
+        })
+        .catch(err => {
+          console.error('Failed to restore session:', err);
+          // Clear invalid session
+          localStorage.removeItem('alw_roomCode');
+          localStorage.removeItem('alw_playerName');
+        });
+    }
+
     // Joined room event
     socket.on('joined_room', (data) => {
       setPlayerId(data.playerId);
       const room = data.room;
       
+      console.log('Joined room, restoring state:', room);
+      
+      // Map server phase to client phase
+      let clientPhase = GamePhase.LOBBY;
+      if (room.gameState.phase === 'SETUP') clientPhase = GamePhase.SETUP;
+      else if (room.gameState.phase === 'GAME_LOOP') clientPhase = GamePhase.GAME_LOOP;
+      else if (room.gameState.phase === 'GAME_OVER') clientPhase = GamePhase.GAME_OVER;
+      
+      // Find my player data
+      const myPlayer = room.players.find((p: any) => p.socketId === socket.id);
+      const opponent = room.players.find((p: any) => p.socketId !== socket.id);
+      
+      // Restore full game state
       setGame(prev => ({
         ...prev,
-        phase: GamePhase.LOBBY,
+        phase: clientPhase,
         roomCode: room.code,
-        player: {
-          ...prev.player,
-          name: room.players.find((p: any) => p.socketId === socket.id)?.name || prev.player.name
-        }
+        player: myPlayer ? {
+          name: myPlayer.name,
+          isBot: false,
+          tiles: myPlayer.tiles || [],
+          secretWord: myPlayer.secretWord || '',
+          originalTiles: myPlayer.originalTiles || [],
+          tokens: myPlayer.tokens || 0,
+          guesses: myPlayer.guesses || [],
+          hasGuessedCorrectly: myPlayer.hasGuessedCorrectly || false,
+          revealedLetters: prev.player.revealedLetters,
+          revealedPositions: prev.player.revealedPositions,
+        } : prev.player,
+        opponent: opponent ? {
+          name: opponent.name,
+          isBot: false,
+          tiles: opponent.tiles || [],
+          secretWord: '',
+          originalTiles: opponent.originalTiles || [],
+          tokens: opponent.tokens || 0,
+          guesses: opponent.guesses || [],
+          hasGuessedCorrectly: opponent.hasGuessedCorrectly || false,
+          revealedLetters: prev.opponent.revealedLetters,
+          revealedPositions: prev.opponent.revealedPositions,
+        } : prev.opponent,
+        activeCards: room.deck || [],
+        turn: room.gameState.turn === myPlayer?.socketId ? 'player' : 'opponent',
+        history: room.gameState.history || [],
       }));
 
       updatePlayersFromRoom(room);
+      
+      // Restore setup state if in SETUP phase
+      if (clientPhase === GamePhase.SETUP && myPlayer) {
+        setSetupTiles(myPlayer.originalTiles || []);
+        setSetupWord('');
+        setSwapsRemaining(2);
+      }
     });
 
     // Player joined
     socket.on('player_joined', (data) => {
+      console.log('Player joined event:', data);
       showNotification('¡Un jugador se ha unido!');
-      // Refetch room data
-      if (game.roomCode) {
-        socketService.getRoom(game.roomCode).then(room => {
-          updatePlayersFromRoom(room);
-        });
+      
+      // Update players list from the room data sent by server
+      if (data.room) {
+        updatePlayersFromRoom(data.room);
       }
     });
 
     // Player ready updated
     socket.on('player_ready_updated', (data) => {
-      // Room will be updated, refetch or update local state
+      console.log('Player ready updated:', data);
+      if (data.room) {
+        updatePlayersFromRoom(data.room);
+      }
     });
 
     // Game starting (both players ready)
-    socket.on('game_starting', () => {
+    socket.on('game_starting', (data) => {
+      const room = data.room;
+      console.log('Game starting, room:', room);
+      
+      // Find my tiles
+      const myPlayer = room.players.find((p: any) => p.socketId === socket.id);
+      const tiles = myPlayer?.originalTiles || [];
+      
       setGame(prev => ({ ...prev, phase: GamePhase.SETUP }));
-      const tiles = generateTiles();
       setSetupTiles(tiles);
       setSetupWord('');
       setSwapsRemaining(2);
@@ -272,6 +353,10 @@ export default function App() {
       
       console.log('Room created with code:', roomCode);
       
+      // Save to localStorage for persistence
+      localStorage.setItem('alw_roomCode', roomCode);
+      localStorage.setItem('alw_playerName', playerName);
+      
       // Wait for socket to be connected
       const socket = socketService.getSocket();
       if (socket && socket.connected) {
@@ -304,6 +389,10 @@ export default function App() {
     try {
       console.log('Joining room:', roomCode, 'as', playerName);
       await socketService.joinRoom(roomCode, playerName);
+      
+      // Save to localStorage for persistence
+      localStorage.setItem('alw_roomCode', roomCode);
+      localStorage.setItem('alw_playerName', playerName);
       
       // Wait for socket to be connected
       const socket = socketService.getSocket();
@@ -341,6 +430,10 @@ export default function App() {
   };
 
   const handleLeaveRoom = () => {
+    // Clear localStorage
+    localStorage.removeItem('alw_roomCode');
+    localStorage.removeItem('alw_playerName');
+    
     setGame(INITIAL_STATE);
     setPlayers([]);
     setLocalPlayerReady(false);

@@ -55,8 +55,15 @@ export function setupSocketHandlers(io) {
     });
     
     // Player ready
-    socket.on('player_ready', async ({ roomCode, playerIndex, tiles }) => {
+    socket.on('player_ready', async (data) => {
       try {
+        const { roomCode } = data || {};
+        
+        if (!roomCode) {
+          socket.emit('error', { message: 'Missing roomCode' });
+          return;
+        }
+        
         const room = await Room.findOne({ code: roomCode.toUpperCase() });
         
         if (!room) {
@@ -64,20 +71,36 @@ export function setupSocketHandlers(io) {
           return;
         }
         
-        room.players[playerIndex].originalTiles = tiles;
+        // Find player by socket ID
+        const playerIndex = room.players.findIndex(p => p.socketId === socket.id);
+        
+        if (playerIndex === -1) {
+          socket.emit('error', { message: 'Player not found in room' });
+          return;
+        }
+        
+        // Generate tiles for this player if not already done
+        if (!room.players[playerIndex].originalTiles || room.players[playerIndex].originalTiles.length === 0) {
+          const tiles = generateTiles();
+          room.players[playerIndex].originalTiles = tiles;
+        }
+        
         room.players[playerIndex].isReady = true;
         await room.save();
         
+        // Notify all players in room
+        io.to(room.code).emit('player_ready_updated', { room });
+        
         // Check if both players are ready
         if (room.players.length === 2 && room.players.every(p => p.isReady)) {
-          // Start game
+          // Start game setup phase
           room.gameState.phase = 'SETUP';
           await room.save();
           
-          io.to(roomCode.toUpperCase()).emit('game_starting', { room });
-        } else {
-          io.to(roomCode.toUpperCase()).emit('player_ready_updated', { room });
+          io.to(room.code).emit('game_starting', { room });
         }
+        
+        console.log(`✅ Player ${playerIndex} ready in room ${roomCode}`);
       } catch (error) {
         console.error('Error marking player ready:', error);
         socket.emit('error', { message: 'Failed to mark ready' });
@@ -85,8 +108,15 @@ export function setupSocketHandlers(io) {
     });
     
     // Submit secret word
-    socket.on('submit_word', async ({ roomCode, playerIndex, word }) => {
+    socket.on('submit_word', async (data) => {
       try {
+        const { roomCode, word } = data || {};
+        
+        if (!roomCode || !word) {
+          socket.emit('error', { message: 'Missing roomCode or word' });
+          return;
+        }
+        
         const room = await Room.findOne({ code: roomCode.toUpperCase() });
         
         if (!room) {
@@ -94,8 +124,19 @@ export function setupSocketHandlers(io) {
           return;
         }
         
+        // Find player by socket ID
+        const playerIndex = room.players.findIndex(p => p.socketId === socket.id);
+        
+        if (playerIndex === -1) {
+          socket.emit('error', { message: 'Player not found in room' });
+          return;
+        }
+        
         room.players[playerIndex].secretWord = word.toUpperCase();
         await room.save();
+        
+        // Notify room
+        io.to(room.code).emit('word_submitted', { room });
         
         // Check if both players submitted
         if (room.players.every(p => p.secretWord)) {
@@ -107,16 +148,17 @@ export function setupSocketHandlers(io) {
           room.players[1].tiles = p1Tiles;
           
           // Generate deck
-          room.gameState.activeCards = generateDeck();
+          room.deck = generateDeck();
           room.gameState.phase = 'GAME_LOOP';
+          room.gameState.turn = room.players[0].socketId;
           room.gameState.history = ['¡Intercambio realizado! Comienza el juego.'];
           
           await room.save();
           
-          io.to(roomCode.toUpperCase()).emit('game_started', { room });
-        } else {
-          io.to(roomCode.toUpperCase()).emit('word_submitted', { room });
+          io.to(room.code).emit('game_started', { room });
         }
+        
+        console.log(`✅ Player ${playerIndex} submitted word in room ${roomCode}`);
       } catch (error) {
         console.error('Error submitting word:', error);
         socket.emit('error', { message: 'Failed to submit word' });
