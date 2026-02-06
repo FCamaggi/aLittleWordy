@@ -35,19 +35,19 @@ export function setupSocketHandlers(io) {
         room.players[playerIndex].socketId = socket.id;
         await room.save();
 
-        // Join socket room
+        // CRITICAL: Join socket room FIRST
         socket.join(room.code);
+        
+        console.log(`✅ ${playerName} joined room ${roomCode}`);
 
-        // Notify player
+        // THEN notify player (must be after join)
         socket.emit('joined_room', { room, playerId: playerName });
 
-        // Notify other players
+        // THEN notify other players in room
         socket.to(room.code).emit('player_joined', {
           room,
           playerName
         });
-
-        console.log(`✅ ${playerName} joined room ${roomCode}`);
       } catch (error) {
         console.error('Error joining room:', error);
         socket.emit('error', { message: error.message || 'Failed to join room' });
@@ -166,10 +166,9 @@ export function setupSocketHandlers(io) {
 
           await room.save();
 
-          console.log(`✅ Game started in room ${roomCode}`);
+          console.log(`✅ Game started in room ${roomCode}, emitting to all players in room`);
           io.to(room.code).emit('game_started', { room });
         }
-        console.log(`✅ Player ${playerIndex} (${room.players[playerIndex].name}) submitted word in room ${roomCode}`);
       } catch (error) {
         console.error('Error submitting word:', error);
         console.error('Error details:', {

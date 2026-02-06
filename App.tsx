@@ -297,14 +297,16 @@ export default function App() {
     socket.on('game_started', (data) => {
       const room = data.room;
       console.log('🎮 game_started event received! Transitioning to GAME_LOOP...', room);
-      console.log('Game data - activeCards:', room.gameState?.activeCards);
+      console.log('Game data - activeCards:', room.gameState?.activeCards?.length);
       console.log('Game data - phase:', room.gameState?.phase);
+      console.log('Game data - turn:', room.gameState?.turn);
+      console.log('My socket ID:', socketService.getSocket()?.id);
       
       updateGameStateFromRoom(room);
       setWordSubmitted(false); // Reset for next potential phase
       showNotification('¡El juego ha comenzado!');
       
-      console.log('✅ Phase changed to GAME_LOOP');
+      console.log('✅ game_started processing complete');
     });
 
     // Card used
@@ -370,11 +372,25 @@ export default function App() {
       (p: any) => p.socketId !== socket?.id,
     );
 
-    if (!myPlayerData || !opponentData) return;
+    if (!myPlayerData || !opponentData) {
+      console.error('❌ updateGameStateFromRoom: Missing player data', { myPlayerData, opponentData });
+      return;
+    }
+
+    console.log('🔄 Updating game state from room:', {
+      roomPhase: room.gameState?.phase,
+      turn: room.gameState?.turn,
+      mySocketId: socket?.id,
+      isMyTurn: room.gameState?.turn === myPlayerData.socketId,
+      activeCards: room.gameState?.activeCards?.length || 0,
+      myTiles: myPlayerData.tiles?.length || 0,
+      opponentTiles: opponentData.tiles?.length || 0
+    });
 
     setGame((prev) => ({
       ...prev,
       phase: room.gameState.phase === 'GAME_LOOP' ? GamePhase.GAME_LOOP : prev.phase,
+      roomCode: room.code || prev.roomCode,
       turn: room.gameState.turn === myPlayerData.socketId ? 'player' : 'opponent',
       player: {
         ...prev.player,
@@ -1452,8 +1468,24 @@ export default function App() {
     </div>
   );
 
-  const renderGame = () => (
+  const renderGame = () => {
+    const isMyTurn = game.turn === 'player' && !game.waitingForOpponentGuess;
+    console.log('🎮 Rendering game - My turn:', isMyTurn, '| Turn value:', game.turn, '| Waiting:', game.waitingForOpponentGuess);
+    
+    return (
     <div className="h-screen bg-slate-100 flex flex-col overflow-hidden">
+      {/* Turn Indicator Banner */}
+      {isMyTurn && (
+        <div className="bg-green-500 text-white py-2 px-4 text-center font-bold text-sm animate-pulse">
+          🎮 ES TU TURNO - Elige una acción
+        </div>
+      )}
+      {game.turn === 'opponent' && !game.waitingForOpponentGuess && (
+        <div className="bg-slate-600 text-white py-2 px-4 text-center font-medium text-sm">
+          ⏳ Turno de {game.opponent.name}
+        </div>
+      )}
+      
       {/* Top Bar */}
       <header className="bg-indigo-900 text-white p-3 shadow-md z-20 flex justify-between items-center shrink-0">
         <div className="flex items-center gap-4">
@@ -1607,6 +1639,7 @@ export default function App() {
       )}
     </div>
   );
+  };
 
   const renderGameOver = () => (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6">
