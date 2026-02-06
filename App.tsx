@@ -66,6 +66,7 @@ export default function App() {
   const [swapsRemaining, setSwapsRemaining] = useState(2);
   const [isSwapping, setIsSwapping] = useState(false);
   const [selectedSwapTiles, setSelectedSwapTiles] = useState<string[]>([]);
+  const [wordSubmitted, setWordSubmitted] = useState(false);
   
   // Event Modal State
   const [eventModal, setEventModal] = useState<Partial<EventModalProps>>({ isOpen: false });
@@ -217,13 +218,26 @@ export default function App() {
 
     // Word submitted
     socket.on('word_submitted', (data) => {
-      showNotification('Palabra enviada');
+      console.log('Word submitted event received:', data);
+      // If the other player submitted, show notification
+      if (data.playerIndex !== undefined) {
+        const me = game.playerName;
+        const room = data.room;
+        if (room && room.players) {
+          const otherPlayer = room.players.find((p: any) => p.name !== me);
+          if (otherPlayer && data.playerIndex === room.players.indexOf(otherPlayer)) {
+            showNotification(`${otherPlayer.name} envió su palabra`);
+          }
+        }
+      }
     });
 
     // Game started (both words submitted, game begins)
     socket.on('game_started', (data) => {
       const room = data.room;
       updateGameStateFromRoom(room);
+      setWordSubmitted(false); // Reset for next potential phase
+      showNotification('¡El juego ha comenzado!');
     });
 
     // Card used
@@ -452,6 +466,7 @@ export default function App() {
     setGame(INITIAL_STATE);
     setPlayers([]);
     setLocalPlayerReady(false);
+    setWordSubmitted(false);
     setIsHost(false);
     socketService.disconnect();
     socketService.connect();
@@ -531,6 +546,7 @@ export default function App() {
     // Multiplayer mode: send word to server
     if (game.roomCode && !game.opponent.isBot) {
       socketService.submitWord(game.roomCode, setupWord.toUpperCase());
+      setWordSubmitted(true);
       showNotification('Palabra enviada. Esperando al oponente...');
       return;
     }
@@ -1137,8 +1153,8 @@ export default function App() {
                       <RefreshCw className="w-5 h-5 mx-auto text-orange-500" />
                     </Button>
                  )}
-                 <Button onClick={confirmSetupWord} disabled={setupWord.length === 0} className={`py-4 text-lg ${swapsRemaining > 0 ? 'flex-[4]' : 'w-full'}`}>
-                   Confirmar <ArrowRight className="inline ml-2" />
+                 <Button onClick={confirmSetupWord} disabled={setupWord.length === 0 || wordSubmitted} className={`py-4 text-lg ${swapsRemaining > 0 ? 'flex-[4]' : 'w-full'}`}>
+                   {wordSubmitted ? 'Palabra Enviada ✓' : 'Confirmar'} {!wordSubmitted && <ArrowRight className="inline ml-2" />}
                  </Button>
                </div>
              </>

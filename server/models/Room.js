@@ -57,11 +57,7 @@ const RoomSchema = new mongoose.Schema({
       enum: ['LOBBY', 'SETUP', 'GAME_LOOP', 'GAME_OVER'],
       default: 'LOBBY'
     },
-    turn: {
-      type: String,
-      enum: ['player1', 'player2'],
-      default: 'player1'
-    },
+    turn: String, // socketId of the player whose turn it is
     activeCards: [CardSchema],
     history: [String],
     winner: String,

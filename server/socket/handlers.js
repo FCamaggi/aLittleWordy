@@ -103,6 +103,7 @@ export function setupSocketHandlers(io) {
         console.log(`✅ Player ${playerIndex} ready in room ${roomCode}`);
       } catch (error) {
         console.error('Error marking player ready:', error);
+        console.error('Error stack:', error.stack);
         socket.emit('error', { message: 'Failed to mark ready' });
       }
     });
@@ -112,7 +113,10 @@ export function setupSocketHandlers(io) {
       try {
         const { roomCode, word } = data || {};
         
+        console.log('submit_word received:', { roomCode, word: word ? '***' : undefined });
+        
         if (!roomCode || !word) {
+          console.error('Missing roomCode or word:', data);
           socket.emit('error', { message: 'Missing roomCode or word' });
           return;
         }
@@ -135,11 +139,18 @@ export function setupSocketHandlers(io) {
         room.players[playerIndex].secretWord = word.toUpperCase();
         await room.save();
         
+        console.log(`✅ Player ${playerIndex} (${room.players[playerIndex].name}) submitted word in room ${roomCode}`);
+        
         // Notify room
-        io.to(room.code).emit('word_submitted', { room });
+        io.to(room.code).emit('word_submitted', { room, playerIndex });
         
         // Check if both players submitted
-        if (room.players.every(p => p.secretWord)) {
+        const bothSubmitted = room.players.every(p => p.secretWord);
+        console.log(`Both players submitted: ${bothSubmitted}`, room.players.map(p => ({ name: p.name, hasWord: !!p.secretWord })));
+        
+        if (bothSubmitted) {
+          console.log('Both players submitted, starting game...');
+          
           // Swap tiles
           const p1Tiles = shuffleArray([...room.players[0].originalTiles]);
           const p2Tiles = shuffleArray([...room.players[1].originalTiles]);
@@ -148,20 +159,25 @@ export function setupSocketHandlers(io) {
           room.players[1].tiles = p1Tiles;
           
           // Generate deck
-          room.deck = generateDeck();
+          room.gameState.activeCards = generateDeck();
           room.gameState.phase = 'GAME_LOOP';
           room.gameState.turn = room.players[0].socketId;
           room.gameState.history = ['¡Intercambio realizado! Comienza el juego.'];
           
           await room.save();
           
+          console.log(`✅ Game started in room ${roomCode}`);
           io.to(room.code).emit('game_started', { room });
-        }
-        
-        console.log(`✅ Player ${playerIndex} submitted word in room ${roomCode}`);
+        }        
+        console.log(`✅ Player ${playerIndex} (${room.players[playerIndex].name}) submitted word in room ${roomCode}`);
       } catch (error) {
         console.error('Error submitting word:', error);
-        socket.emit('error', { message: 'Failed to submit word' });
+        console.error('Error details:', {
+          message: error.message,
+          stack: error.stack,
+          data: data
+        });
+        socket.emit('error', { message: error.message || 'Failed to submit word' });
       }
     });
     
