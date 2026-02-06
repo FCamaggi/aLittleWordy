@@ -222,7 +222,8 @@ export const CARDS: Card[] = [
     id: 'iago',
     name: 'Iago',
     flavor: 'Rima',
-    description: 'Tu oponente debe decir una palabra que rime con su palabra secreta.',
+    description:
+      'Tu oponente debe decir una palabra que rime con su palabra secreta.',
     cost: 5,
     type: 'spicy',
   },

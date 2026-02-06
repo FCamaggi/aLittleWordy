@@ -247,7 +247,10 @@ export default function App() {
     // Game starting (both players ready)
     socket.on('game_starting', (data) => {
       const room = data.room;
-      console.log('🎮 game_starting event received! Transitioning to SETUP...', room);
+      console.log(
+        '🎮 game_starting event received! Transitioning to SETUP...',
+        room,
+      );
 
       // Find my tiles
       const myPlayer = room.players.find((p: any) => p.socketId === socket.id);
@@ -270,7 +273,7 @@ export default function App() {
       setSetupTiles(tiles);
       setSetupWord('');
       setSwapsRemaining(2);
-      
+
       console.log('✅ Phase changed to SETUP');
     });
 
@@ -296,16 +299,22 @@ export default function App() {
     // Game started (both words submitted, game begins)
     socket.on('game_started', (data) => {
       const room = data.room;
-      console.log('🎮 game_started event received! Transitioning to GAME_LOOP...', room);
-      console.log('Game data - activeCards:', room.gameState?.activeCards?.length);
+      console.log(
+        '🎮 game_started event received! Transitioning to GAME_LOOP...',
+        room,
+      );
+      console.log(
+        'Game data - activeCards:',
+        room.gameState?.activeCards?.length,
+      );
       console.log('Game data - phase:', room.gameState?.phase);
       console.log('Game data - turn:', room.gameState?.turn);
       console.log('My socket ID:', socketService.getSocket()?.id);
-      
+
       updateGameStateFromRoom(room);
       setWordSubmitted(false); // Reset for next potential phase
       showNotification('¡El juego ha comenzado!');
-      
+
       console.log('✅ game_started processing complete');
     });
 
@@ -331,7 +340,8 @@ export default function App() {
     // Error
     socket.on('error', (data) => {
       console.error('❌ Socket error:', data);
-      const message = typeof data === 'string' ? data : data?.message || 'Error desconocido';
+      const message =
+        typeof data === 'string' ? data : data?.message || 'Error desconocido';
       showNotification(`Error: ${message}`);
     });
 
@@ -373,7 +383,10 @@ export default function App() {
     );
 
     if (!myPlayerData || !opponentData) {
-      console.error('❌ updateGameStateFromRoom: Missing player data', { myPlayerData, opponentData });
+      console.error('❌ updateGameStateFromRoom: Missing player data', {
+        myPlayerData,
+        opponentData,
+      });
       return;
     }
 
@@ -384,14 +397,16 @@ export default function App() {
       isMyTurn: room.gameState?.turn === myPlayerData.socketId,
       activeCards: room.gameState?.activeCards?.length || 0,
       myTiles: myPlayerData.tiles?.length || 0,
-      opponentTiles: opponentData.tiles?.length || 0
+      opponentTiles: opponentData.tiles?.length || 0,
     });
 
     setGame((prev) => ({
       ...prev,
-      phase: room.gameState.phase === 'GAME_LOOP' ? GamePhase.GAME_LOOP : prev.phase,
+      phase:
+        room.gameState.phase === 'GAME_LOOP' ? GamePhase.GAME_LOOP : prev.phase,
       roomCode: room.code || prev.roomCode,
-      turn: room.gameState.turn === myPlayerData.socketId ? 'player' : 'opponent',
+      turn:
+        room.gameState.turn === myPlayerData.socketId ? 'player' : 'opponent',
       player: {
         ...prev.player,
         name: myPlayerData.name,
@@ -1470,175 +1485,184 @@ export default function App() {
 
   const renderGame = () => {
     const isMyTurn = game.turn === 'player' && !game.waitingForOpponentGuess;
-    console.log('🎮 Rendering game - My turn:', isMyTurn, '| Turn value:', game.turn, '| Waiting:', game.waitingForOpponentGuess);
-    
+    console.log(
+      '🎮 Rendering game - My turn:',
+      isMyTurn,
+      '| Turn value:',
+      game.turn,
+      '| Waiting:',
+      game.waitingForOpponentGuess,
+    );
+
     return (
-    <div className="h-screen bg-slate-100 flex flex-col overflow-hidden">
-      {/* Turn Indicator Banner */}
-      {isMyTurn && (
-        <div className="bg-green-500 text-white py-2 px-4 text-center font-bold text-sm animate-pulse">
-          🎮 ES TU TURNO - Elige una acción
-        </div>
-      )}
-      {game.turn === 'opponent' && !game.waitingForOpponentGuess && (
-        <div className="bg-slate-600 text-white py-2 px-4 text-center font-medium text-sm">
-          ⏳ Turno de {game.opponent.name}
-        </div>
-      )}
-      
-      {/* Top Bar */}
-      <header className="bg-indigo-900 text-white p-3 shadow-md z-20 flex justify-between items-center shrink-0">
-        <div className="flex items-center gap-4">
-          <div className="text-center">
-            <div className="text-[10px] uppercase opacity-70 font-bold tracking-wider">
-              Tú
-            </div>
-            <div className="text-2xl font-black leading-none">
-              {game.player.tokens} <span className="text-sm">🍓</span>
-            </div>
+      <div className="h-screen bg-slate-100 flex flex-col overflow-hidden">
+        {/* Turn Indicator Banner */}
+        {isMyTurn && (
+          <div className="bg-green-500 text-white py-2 px-4 text-center font-bold text-sm animate-pulse">
+            🎮 ES TU TURNO - Elige una acción
           </div>
-          <div className="h-8 w-px bg-indigo-700"></div>
-          <div className="text-center">
-            <div className="text-[10px] uppercase opacity-70 font-bold tracking-wider">
-              {game.opponent.name}
-            </div>
-            <div className="text-2xl font-black leading-none">
-              {game.opponent.tokens} <span className="text-sm">🍓</span>
-            </div>
+        )}
+        {game.turn === 'opponent' && !game.waitingForOpponentGuess && (
+          <div className="bg-slate-600 text-white py-2 px-4 text-center font-medium text-sm">
+            ⏳ Turno de {game.opponent.name}
           </div>
-        </div>
+        )}
 
-        <div className="flex items-center gap-2">
-          <div
-            className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 ${game.turn === 'player' ? 'bg-green-500 text-white' : 'bg-indigo-800 text-indigo-300'}`}
-          >
-            {game.turn === 'player' ? 'Tu Turno' : game.opponent.name}
+        {/* Top Bar */}
+        <header className="bg-indigo-900 text-white p-3 shadow-md z-20 flex justify-between items-center shrink-0">
+          <div className="flex items-center gap-4">
+            <div className="text-center">
+              <div className="text-[10px] uppercase opacity-70 font-bold tracking-wider">
+                Tú
+              </div>
+              <div className="text-2xl font-black leading-none">
+                {game.player.tokens} <span className="text-sm">🍓</span>
+              </div>
+            </div>
+            <div className="h-8 w-px bg-indigo-700"></div>
+            <div className="text-center">
+              <div className="text-[10px] uppercase opacity-70 font-bold tracking-wider">
+                {game.opponent.name}
+              </div>
+              <div className="text-2xl font-black leading-none">
+                {game.opponent.tokens} <span className="text-sm">🍓</span>
+              </div>
+            </div>
           </div>
-          <button
-            onClick={() => setHistoryOpen(!historyOpen)}
-            className="p-2 bg-indigo-800 rounded-full hover:bg-indigo-700 relative"
-          >
-            <History className="w-5 h-5" />
-            {game.history.length > 0 && (
-              <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-indigo-900"></span>
-            )}
-          </button>
-          <button
-            onClick={() => setManualOpen(true)}
-            className="p-2 bg-indigo-800 rounded-full hover:bg-indigo-700"
-          >
-            <BookOpen className="w-5 h-5" />
-          </button>
-          {game.roomCode && (
-            <button
-              onClick={handleLeaveRoom}
-              className="p-2 bg-red-600 rounded-full hover:bg-red-700"
-              title="Salir del Juego"
+
+          <div className="flex items-center gap-2">
+            <div
+              className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 ${game.turn === 'player' ? 'bg-green-500 text-white' : 'bg-indigo-800 text-indigo-300'}`}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-5 h-5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                <polyline points="16 17 21 12 16 7"></polyline>
-                <line x1="21" y1="12" x2="9" y2="12"></line>
-              </svg>
+              {game.turn === 'player' ? 'Tu Turno' : game.opponent.name}
+            </div>
+            <button
+              onClick={() => setHistoryOpen(!historyOpen)}
+              className="p-2 bg-indigo-800 rounded-full hover:bg-indigo-700 relative"
+            >
+              <History className="w-5 h-5" />
+              {game.history.length > 0 && (
+                <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-indigo-900"></span>
+              )}
             </button>
-          )}
-        </div>
-      </header>
-
-      {/* History Drawer */}
-      {historyOpen && (
-        <div
-          className="absolute top-16 left-0 right-0 bottom-0 bg-slate-900/50 z-30"
-          onClick={() => setHistoryOpen(false)}
-        >
-          <div
-            className="bg-white w-3/4 max-w-sm h-full shadow-2xl p-4 overflow-y-auto animate-in slide-in-from-left"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="font-bold text-lg mb-4 text-indigo-900 flex items-center gap-2">
-              <History className="w-5 h-5" /> Historial
-            </h3>
-            <div className="space-y-2">
-              {game.history.map((h, i) => (
-                <div
-                  key={i}
-                  className="text-sm p-3 bg-slate-50 rounded-lg border border-slate-100 text-slate-700"
+            <button
+              onClick={() => setManualOpen(true)}
+              className="p-2 bg-indigo-800 rounded-full hover:bg-indigo-700"
+            >
+              <BookOpen className="w-5 h-5" />
+            </button>
+            {game.roomCode && (
+              <button
+                onClick={handleLeaveRoom}
+                className="p-2 bg-red-600 rounded-full hover:bg-red-700"
+                title="Salir del Juego"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-5 h-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 >
-                  {h}
-                </div>
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                  <polyline points="16 17 21 12 16 7"></polyline>
+                  <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+              </button>
+            )}
+          </div>
+        </header>
+
+        {/* History Drawer */}
+        {historyOpen && (
+          <div
+            className="absolute top-16 left-0 right-0 bottom-0 bg-slate-900/50 z-30"
+            onClick={() => setHistoryOpen(false)}
+          >
+            <div
+              className="bg-white w-3/4 max-w-sm h-full shadow-2xl p-4 overflow-y-auto animate-in slide-in-from-left"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="font-bold text-lg mb-4 text-indigo-900 flex items-center gap-2">
+                <History className="w-5 h-5" /> Historial
+              </h3>
+              <div className="space-y-2">
+                {game.history.map((h, i) => (
+                  <div
+                    key={i}
+                    className="text-sm p-3 bg-slate-50 rounded-lg border border-slate-100 text-slate-700"
+                  >
+                    {h}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Main Area */}
+        <main className="flex-1 overflow-y-auto p-4 space-y-6">
+          <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+            <div className="text-xs font-bold text-slate-400 uppercase mb-2 flex justify-between">
+              <span>Fichas de {game.opponent.name}</span>
+              <span>(Mis fichas originales)</span>
+            </div>
+            <div className="flex flex-wrap gap-1.5 justify-center opacity-70">
+              {game.opponent.tiles.map((t, i) => (
+                <Tile key={i} tile={t} small faceDown />
               ))}
             </div>
           </div>
-        </div>
-      )}
 
-      {/* Main Area */}
-      <main className="flex-1 overflow-y-auto p-4 space-y-6">
-        <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
-          <div className="text-xs font-bold text-slate-400 uppercase mb-2 flex justify-between">
-            <span>Fichas de {game.opponent.name}</span>
-            <span>(Mis fichas originales)</span>
-          </div>
-          <div className="flex flex-wrap gap-1.5 justify-center opacity-70">
-            {game.opponent.tiles.map((t, i) => (
-              <Tile key={i} tile={t} small faceDown />
-            ))}
-          </div>
-        </div>
-
-        <div className="bg-white p-5 rounded-2xl border-2 border-indigo-100 shadow-md">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="font-bold text-indigo-900">Tus Fichas</h3>
-            <Button
-              onClick={handleGuessClick}
-              disabled={game.turn !== 'player' || game.waitingForOpponentGuess}
-              className="text-sm px-4 py-1.5"
-            >
-              Adivinar
-            </Button>
-          </div>
-          <div className="flex flex-wrap gap-2 justify-center bg-slate-50 p-3 rounded-xl border border-slate-100 min-h-[80px]">
-            {game.player.tiles.map((t) => (
-              <Tile key={t.id} tile={t} />
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <h3 className="text-sm font-bold text-slate-500 uppercase mb-3 px-1">
-            Usar Pistas
-          </h3>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pb-8">
-            {game.activeCards.map((card) => (
-              <Card
-                key={card.id}
-                card={card}
-                onClick={() => handleCardClick(card)}
+          <div className="bg-white p-5 rounded-2xl border-2 border-indigo-100 shadow-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-bold text-indigo-900">Tus Fichas</h3>
+              <Button
+                onClick={handleGuessClick}
                 disabled={
                   game.turn !== 'player' || game.waitingForOpponentGuess
                 }
-              />
-            ))}
+                className="text-sm px-4 py-1.5"
+              >
+                Adivinar
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-2 justify-center bg-slate-50 p-3 rounded-xl border border-slate-100 min-h-[80px]">
+              {game.player.tiles.map((t) => (
+                <Tile key={t.id} tile={t} />
+              ))}
+            </div>
           </div>
-        </div>
-      </main>
 
-      {game.waitingForOpponentGuess && (
-        <div className="bg-yellow-100 border-t border-yellow-200 p-3 text-center text-yellow-800 text-sm font-medium z-10 animate-pulse">
-          Has acertado. Esperando a superar tokens...
-        </div>
-      )}
-    </div>
-  );
+          <div>
+            <h3 className="text-sm font-bold text-slate-500 uppercase mb-3 px-1">
+              Usar Pistas
+            </h3>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pb-8">
+              {game.activeCards.map((card) => (
+                <Card
+                  key={card.id}
+                  card={card}
+                  onClick={() => handleCardClick(card)}
+                  disabled={
+                    game.turn !== 'player' || game.waitingForOpponentGuess
+                  }
+                />
+              ))}
+            </div>
+          </div>
+        </main>
+
+        {game.waitingForOpponentGuess && (
+          <div className="bg-yellow-100 border-t border-yellow-200 p-3 text-center text-yellow-800 text-sm font-medium z-10 animate-pulse">
+            Has acertado. Esperando a superar tokens...
+          </div>
+        )}
+      </div>
+    );
   };
 
   const renderGameOver = () => (

@@ -37,10 +37,10 @@ export function setupSocketHandlers(io) {
 
         // CRITICAL: Join socket room FIRST
         socket.join(room.code);
-        
+
         // Small delay to ensure join completes on slow connections
         await new Promise(resolve => setTimeout(resolve, 50));
-        
+
         console.log(`✅ ${playerName} joined room ${roomCode}`);
 
         // THEN notify player (must be after join)

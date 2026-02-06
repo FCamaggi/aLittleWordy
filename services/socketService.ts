@@ -124,7 +124,7 @@ class SocketService {
     }
 
     // Small delay to let backend process complete
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
   }
 
   // Game Actions
