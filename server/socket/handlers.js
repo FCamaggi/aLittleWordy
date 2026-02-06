@@ -6,8 +6,16 @@ export function setupSocketHandlers(io) {
     console.log(`🔌 Client connected: ${socket.id}`);
     
     // Join room
-    socket.on('join_room', async ({ roomCode, playerName }) => {
+    socket.on('join_room', async (data) => {
       try {
+        const { roomCode, playerName } = data || {};
+        
+        if (!roomCode || !playerName) {
+          console.error('Missing roomCode or playerName:', data);
+          socket.emit('error', { message: 'Missing roomCode or playerName' });
+          return;
+        }
+        
         const room = await Room.findOne({ code: roomCode.toUpperCase() });
         
         if (!room) {
@@ -28,13 +36,13 @@ export function setupSocketHandlers(io) {
         await room.save();
         
         // Join socket room
-        socket.join(roomCode.toUpperCase());
+        socket.join(room.code);
         
         // Notify player
-        socket.emit('joined_room', { room, playerIndex });
+        socket.emit('joined_room', { room, playerId: playerName });
         
         // Notify other players
-        socket.to(roomCode.toUpperCase()).emit('player_joined', { 
+        socket.to(room.code).emit('player_joined', { 
           room,
           playerName 
         });
@@ -42,7 +50,7 @@ export function setupSocketHandlers(io) {
         console.log(`✅ ${playerName} joined room ${roomCode}`);
       } catch (error) {
         console.error('Error joining room:', error);
-        socket.emit('error', { message: 'Failed to join room' });
+        socket.emit('error', { message: error.message || 'Failed to join room' });
       }
     });
     

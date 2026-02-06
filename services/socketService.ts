@@ -105,7 +105,12 @@ class SocketService {
 
   // Game Actions
   joinRoomSocket(roomCode: string, playerName: string) {
-    this.socket?.emit('join_room', { roomCode, playerName });
+    if (!this.socket || !this.socket.connected) {
+      console.error('Socket not connected');
+      return;
+    }
+    console.log('Emitting join_room:', { roomCode, playerName });
+    this.socket.emit('join_room', { roomCode, playerName });
   }
 
   setReady(roomCode: string) {

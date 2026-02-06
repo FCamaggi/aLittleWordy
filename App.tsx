@@ -262,7 +262,25 @@ export default function App() {
   const handleCreateRoom = async (playerName: string) => {
     try {
       const { roomCode } = await socketService.createRoom(playerName);
-      socketService.joinRoomSocket(roomCode, playerName);
+      
+      // Wait for socket to be connected
+      const socket = socketService.getSocket();
+      if (socket && socket.connected) {
+        socketService.joinRoomSocket(roomCode, playerName);
+      } else {
+        // Wait for connection
+        const checkConnection = setInterval(() => {
+          const s = socketService.getSocket();
+          if (s && s.connected) {
+            clearInterval(checkConnection);
+            socketService.joinRoomSocket(roomCode, playerName);
+          }
+        }, 100);
+        
+        // Timeout after 5 seconds
+        setTimeout(() => clearInterval(checkConnection), 5000);
+      }
+      
       setIsHost(true);
     } catch (error) {
       showNotification('Error al crear sala');
@@ -273,7 +291,25 @@ export default function App() {
   const handleJoinRoom = async (roomCode: string, playerName: string) => {
     try {
       await socketService.joinRoom(roomCode, playerName);
-      socketService.joinRoomSocket(roomCode, playerName);
+      
+      // Wait for socket to be connected
+      const socket = socketService.getSocket();
+      if (socket && socket.connected) {
+        socketService.joinRoomSocket(roomCode, playerName);
+      } else {
+        // Wait for connection
+        const checkConnection = setInterval(() => {
+          const s = socketService.getSocket();
+          if (s && s.connected) {
+            clearInterval(checkConnection);
+            socketService.joinRoomSocket(roomCode, playerName);
+          }
+        }, 100);
+        
+        // Timeout after 5 seconds
+        setTimeout(() => clearInterval(checkConnection), 5000);
+      }
+      
       setIsHost(false);
     } catch (error: any) {
       showNotification(error.message || 'Error al unirse a sala');
