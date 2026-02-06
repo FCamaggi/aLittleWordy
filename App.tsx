@@ -208,9 +208,18 @@ export default function App() {
       
       // Find my tiles
       const myPlayer = room.players.find((p: any) => p.socketId === socket.id);
+      const opponentPlayer = room.players.find((p: any) => p.socketId !== socket.id);
       const tiles = myPlayer?.originalTiles || [];
       
-      setGame(prev => ({ ...prev, phase: GamePhase.SETUP }));
+      setGame(prev => ({ 
+        ...prev, 
+        phase: GamePhase.SETUP,
+        opponent: {
+          ...prev.opponent,
+          isBot: false,
+          name: opponentPlayer?.name || 'Oponente'
+        }
+      }));
       setSetupTiles(tiles);
       setSetupWord('');
       setSwapsRemaining(2);
@@ -273,14 +282,14 @@ export default function App() {
   const updatePlayersFromRoom = (room: any) => {
     const playerList = room.players.map((p: any) => ({
       name: p.name,
-      ready: p.ready
+      ready: p.isReady
     }));
     setPlayers(playerList);
     
     const socket = socketService.getSocket();
     const me = room.players.find((p: any) => p.socketId === socket?.id);
     if (me) {
-      setLocalPlayerReady(me.ready);
+      setLocalPlayerReady(me.isReady);
       setIsHost(room.players[0].socketId === socket?.id);
     }
   };
@@ -311,6 +320,7 @@ export default function App() {
       opponent: {
         ...prev.opponent,
         name: opponentData.name,
+        isBot: false,
         tiles: opponentData.tiles || prev.opponent.tiles,
         tokens: opponentData.tokens || 0,
         guesses: opponentData.guesses || [],
@@ -1157,6 +1167,11 @@ export default function App() {
                    {wordSubmitted ? 'Palabra Enviada ✓' : 'Confirmar'} {!wordSubmitted && <ArrowRight className="inline ml-2" />}
                  </Button>
                </div>
+               {game.roomCode && (
+                 <Button variant="ghost" onClick={handleLeaveRoom} className="w-full mt-2 text-sm">
+                   Salir del Juego
+                 </Button>
+               )}
              </>
            ) : (
              <div className="flex gap-3 animate-in slide-in-from-bottom-2">
@@ -1188,14 +1203,14 @@ export default function App() {
              </div>
              <div className="h-8 w-px bg-indigo-700"></div>
              <div className="text-center">
-                <div className="text-[10px] uppercase opacity-70 font-bold tracking-wider">Bot</div>
+                <div className="text-[10px] uppercase opacity-70 font-bold tracking-wider">{game.opponent.name}</div>
                 <div className="text-2xl font-black leading-none">{game.opponent.tokens} <span className="text-sm">🍓</span></div>
              </div>
           </div>
 
           <div className="flex items-center gap-2">
              <div className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 ${game.turn === 'player' ? 'bg-green-500 text-white' : 'bg-indigo-800 text-indigo-300'}`}>
-                {game.turn === 'player' ? 'Tu Turno' : 'Bot'}
+                {game.turn === 'player' ? 'Tu Turno' : game.opponent.name}
              </div>
              <button onClick={() => setHistoryOpen(!historyOpen)} className="p-2 bg-indigo-800 rounded-full hover:bg-indigo-700 relative">
                 <History className="w-5 h-5" />
@@ -1204,6 +1219,11 @@ export default function App() {
              <button onClick={() => setManualOpen(true)} className="p-2 bg-indigo-800 rounded-full hover:bg-indigo-700">
                 <BookOpen className="w-5 h-5" />
              </button>
+             {game.roomCode && (
+               <button onClick={handleLeaveRoom} className="p-2 bg-red-600 rounded-full hover:bg-red-700" title="Salir del Juego">
+                 <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+               </button>
+             )}
           </div>
        </header>
 
@@ -1227,7 +1247,7 @@ export default function App() {
        <main className="flex-1 overflow-y-auto p-4 space-y-6">
           <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
              <div className="text-xs font-bold text-slate-400 uppercase mb-2 flex justify-between">
-                <span>Fichas del Bot</span>
+                <span>Fichas de {game.opponent.name}</span>
                 <span>(Mis fichas originales)</span>
              </div>
              <div className="flex flex-wrap gap-1.5 justify-center opacity-70">
