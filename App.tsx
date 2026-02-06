@@ -393,28 +393,41 @@ export default function App() {
       localStorage.setItem('alw_roomCode', roomCode);
       localStorage.setItem('alw_playerName', playerName);
       
-      // Wait for socket to be connected
+      // Set game state to show loading
+      setGame(prev => ({
+        ...prev,
+        roomCode: roomCode,
+        player: { ...prev.player, name: playerName }
+      }));
+      
+      setIsHost(true);
+      
+      // Wait for socket to be connected - use Promise
       const socket = socketService.getSocket();
       if (socket && socket.connected) {
         console.log('Socket already connected, joining room');
         socketService.joinRoomSocket(roomCode, playerName);
       } else {
         console.log('Waiting for socket connection...');
-        // Wait for connection
-        const checkConnection = setInterval(() => {
-          const s = socketService.getSocket();
-          if (s && s.connected) {
+        // Wait for connection with Promise
+        await new Promise<void>((resolve, reject) => {
+          const timeout = setTimeout(() => {
             clearInterval(checkConnection);
-            console.log('Socket connected, joining room');
-            socketService.joinRoomSocket(roomCode, playerName);
-          }
-        }, 100);
-        
-        // Timeout after 5 seconds
-        setTimeout(() => clearInterval(checkConnection), 5000);
+            reject(new Error('Socket connection timeout'));
+          }, 5000);
+          
+          const checkConnection = setInterval(() => {
+            const s = socketService.getSocket();
+            if (s && s.connected) {
+              clearInterval(checkConnection);
+              clearTimeout(timeout);
+              console.log('Socket connected, joining room');
+              socketService.joinRoomSocket(roomCode, playerName);
+              resolve();
+            }
+          }, 100);
+        });
       }
-      
-      setIsHost(true);
     } catch (error) {
       showNotification('Error al crear sala');
       console.error(error);
@@ -433,28 +446,41 @@ export default function App() {
       localStorage.setItem('alw_roomCode', roomCode);
       localStorage.setItem('alw_playerName', playerName);
       
-      // Then connect via socket
+      // Set game state to show loading/joining
+      setGame(prev => ({
+        ...prev,
+        roomCode: roomCode,
+        player: { ...prev.player, name: playerName }
+      }));
+      
+      setIsHost(false);
+      
+      // Then connect via socket - use Promise to wait for connection
       const socket = socketService.getSocket();
       if (socket && socket.connected) {
         console.log('Socket already connected, joining room via socket');
         socketService.joinRoomSocket(roomCode, playerName);
       } else {
         console.log('Waiting for socket connection...');
-        // Wait for connection
-        const checkConnection = setInterval(() => {
-          const s = socketService.getSocket();
-          if (s && s.connected) {
+        // Wait for connection with Promise
+        await new Promise<void>((resolve, reject) => {
+          const timeout = setTimeout(() => {
             clearInterval(checkConnection);
-            console.log('Socket connected, joining room via socket');
-            socketService.joinRoomSocket(roomCode, playerName);
-          }
-        }, 100);
-        
-        // Timeout after 5 seconds
-        setTimeout(() => clearInterval(checkConnection), 5000);
+            reject(new Error('Socket connection timeout'));
+          }, 5000);
+          
+          const checkConnection = setInterval(() => {
+            const s = socketService.getSocket();
+            if (s && s.connected) {
+              clearInterval(checkConnection);
+              clearTimeout(timeout);
+              console.log('Socket connected, joining room via socket');
+              socketService.joinRoomSocket(roomCode, playerName);
+              resolve();
+            }
+          }, 100);
+        });
       }
-      
-      setIsHost(false);
     } catch (error: any) {
       showNotification(error.message || 'Error al unirse a sala');
       console.error(error);
@@ -1083,6 +1109,19 @@ export default function App() {
   // --- Render Helpers ---
 
   const renderLobby = () => {
+    // If we have a roomCode but phase is still MENU, show loading state
+    if (game.phase === GamePhase.MENU && game.roomCode) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-amber-50 to-amber-100 p-4">
+          <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-amber-600 mx-auto mb-4"></div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Conectando...</h2>
+            <p className="text-gray-600">Uniéndose a la sala {game.roomCode}</p>
+          </div>
+        </div>
+      );
+    }
+    
     if (game.phase === GamePhase.MENU) {
       return (
         <>
