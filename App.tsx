@@ -206,7 +206,7 @@ export default function App() {
               revealedPositions: prev.opponent.revealedPositions,
             }
           : prev.opponent,
-        activeCards: room.deck || [],
+        activeCards: room.gameState?.activeCards || room.deck || [],
         turn:
           room.gameState.turn === myPlayer?.socketId ? 'player' : 'opponent',
         history: room.gameState.history || [],
@@ -237,16 +237,17 @@ export default function App() {
 
     // Player ready updated
     socket.on('player_ready_updated', (data) => {
-      console.log('Player ready updated:', data);
+      console.log('✅ player_ready_updated event received:', data);
       if (data.room) {
         updatePlayersFromRoom(data.room);
+        console.log('Players list updated');
       }
     });
 
     // Game starting (both players ready)
     socket.on('game_starting', (data) => {
       const room = data.room;
-      console.log('Game starting, room:', room);
+      console.log('🎮 game_starting event received! Transitioning to SETUP...', room);
 
       // Find my tiles
       const myPlayer = room.players.find((p: any) => p.socketId === socket.id);
@@ -254,6 +255,8 @@ export default function App() {
         (p: any) => p.socketId !== socket.id,
       );
       const tiles = myPlayer?.originalTiles || [];
+
+      console.log('My tiles for setup:', tiles);
 
       setGame((prev) => ({
         ...prev,
@@ -267,6 +270,8 @@ export default function App() {
       setSetupTiles(tiles);
       setSetupWord('');
       setSwapsRemaining(2);
+      
+      console.log('✅ Phase changed to SETUP');
     });
 
     // Word submitted
@@ -291,9 +296,15 @@ export default function App() {
     // Game started (both words submitted, game begins)
     socket.on('game_started', (data) => {
       const room = data.room;
+      console.log('🎮 game_started event received! Transitioning to GAME_LOOP...', room);
+      console.log('Game data - activeCards:', room.gameState?.activeCards);
+      console.log('Game data - phase:', room.gameState?.phase);
+      
       updateGameStateFromRoom(room);
       setWordSubmitted(false); // Reset for next potential phase
       showNotification('¡El juego ha comenzado!');
+      
+      console.log('✅ Phase changed to GAME_LOOP');
     });
 
     // Card used
@@ -363,8 +374,8 @@ export default function App() {
 
     setGame((prev) => ({
       ...prev,
-      phase: room.phase === 'GAME_LOOP' ? GamePhase.GAME_LOOP : prev.phase,
-      turn: room.currentTurn === myPlayerData.socketId ? 'player' : 'opponent',
+      phase: room.gameState.phase === 'GAME_LOOP' ? GamePhase.GAME_LOOP : prev.phase,
+      turn: room.gameState.turn === myPlayerData.socketId ? 'player' : 'opponent',
       player: {
         ...prev.player,
         name: myPlayerData.name,
@@ -387,7 +398,7 @@ export default function App() {
         revealedLetters: prev.opponent.revealedLetters,
         revealedPositions: prev.opponent.revealedPositions,
       },
-      activeCards: room.deck || prev.activeCards,
+      activeCards: room.gameState?.activeCards || room.deck || prev.activeCards,
     }));
   };
 
@@ -467,13 +478,6 @@ export default function App() {
       localStorage.setItem('alw_roomCode', roomCode);
       localStorage.setItem('alw_playerName', playerName);
 
-      // Set game state to show loading
-      setGame((prev) => ({
-        ...prev,
-        roomCode: roomCode,
-        player: { ...prev.player, name: playerName },
-      }));
-
       setIsHost(true);
 
       // Wait for socket to be connected - use Promise
@@ -519,13 +523,6 @@ export default function App() {
       // Save to localStorage for persistence
       localStorage.setItem('alw_roomCode', roomCode);
       localStorage.setItem('alw_playerName', playerName);
-
-      // Set game state to show loading/joining
-      setGame((prev) => ({
-        ...prev,
-        roomCode: roomCode,
-        player: { ...prev.player, name: playerName },
-      }));
 
       setIsHost(false);
 
@@ -1317,21 +1314,6 @@ export default function App() {
   // --- Render Helpers ---
 
   const renderLobby = () => {
-    // If we have a roomCode but phase is still MENU, show loading state
-    if (game.phase === GamePhase.MENU && game.roomCode) {
-      return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-amber-50 to-amber-100 p-4">
-          <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-amber-600 mx-auto mb-4"></div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">
-              Conectando...
-            </h2>
-            <p className="text-gray-600">Uniéndose a la sala {game.roomCode}</p>
-          </div>
-        </div>
-      );
-    }
-
     if (game.phase === GamePhase.MENU) {
       return (
         <>
