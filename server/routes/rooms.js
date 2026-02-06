@@ -96,15 +96,25 @@ router.post('/:code/join', async (req, res) => {
       return res.status(404).json({ error: 'Room not found' });
     }
     
-    if (room.players.length >= 2) {
-      return res.status(400).json({ error: 'Room is full' });
-    }
-    
     if (room.gameState.phase !== 'LOBBY') {
       return res.status(400).json({ error: 'Game already started' });
     }
     
-    // Add player to room
+    // Check if player already exists in room (rejoin)
+    const existingPlayer = room.players.find(p => p.name === playerName.trim());
+    
+    if (existingPlayer) {
+      // Player is rejoining, just return success
+      console.log(`✅ Player ${playerName} rejoining room ${code}`);
+      return res.json(room);
+    }
+    
+    // Check if room is full
+    if (room.players.length >= 2) {
+      return res.status(400).json({ error: 'Room is full' });
+    }
+    
+    // Add new player to room
     room.players.push({
       name: playerName.trim(),
       isReady: false,
@@ -120,6 +130,7 @@ router.post('/:code/join', async (req, res) => {
     
     await room.save();
     
+    console.log(`✅ Player ${playerName} joined room ${code}`);
     res.json(room);
   } catch (error) {
     console.error('Error joining room:', error);

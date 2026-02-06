@@ -87,17 +87,29 @@ export default function App() {
       console.log('Restoring session:', savedRoomCode, savedPlayerName);
       // Try to rejoin the room
       socketService.getRoom(savedRoomCode)
-        .then(room => {
+        .then(async room => {
           // Check if player is still in the room
           const playerExists = room.players.some((p: any) => p.name === savedPlayerName);
           if (playerExists) {
+            // Player exists, just reconnect socket
+            console.log('Player exists in room, reconnecting socket');
             setTimeout(() => {
               socketService.joinRoomSocket(savedRoomCode, savedPlayerName);
             }, 500);
           } else {
-            // Clear invalid session
-            localStorage.removeItem('alw_roomCode');
-            localStorage.removeItem('alw_playerName');
+            // Player doesn't exist, try to join via REST API first
+            console.log('Player not in room, attempting to rejoin via REST API');
+            try {
+              await socketService.joinRoom(savedRoomCode, savedPlayerName);
+              setTimeout(() => {
+                socketService.joinRoomSocket(savedRoomCode, savedPlayerName);
+              }, 500);
+            } catch (err: any) {
+              console.error('Failed to rejoin room:', err);
+              // Clear invalid session
+              localStorage.removeItem('alw_roomCode');
+              localStorage.removeItem('alw_playerName');
+            }
           }
         })
         .catch(err => {
@@ -388,16 +400,19 @@ export default function App() {
   const handleJoinRoom = async (roomCode: string, playerName: string) => {
     try {
       console.log('Joining room:', roomCode, 'as', playerName);
+      
+      // First do the REST API call to add player to room
       await socketService.joinRoom(roomCode, playerName);
+      console.log('Successfully joined room via REST API');
       
       // Save to localStorage for persistence
       localStorage.setItem('alw_roomCode', roomCode);
       localStorage.setItem('alw_playerName', playerName);
       
-      // Wait for socket to be connected
+      // Then connect via socket
       const socket = socketService.getSocket();
       if (socket && socket.connected) {
-        console.log('Socket already connected, joining room');
+        console.log('Socket already connected, joining room via socket');
         socketService.joinRoomSocket(roomCode, playerName);
       } else {
         console.log('Waiting for socket connection...');
@@ -406,7 +421,7 @@ export default function App() {
           const s = socketService.getSocket();
           if (s && s.connected) {
             clearInterval(checkConnection);
-            console.log('Socket connected, joining room');
+            console.log('Socket connected, joining room via socket');
             socketService.joinRoomSocket(roomCode, playerName);
           }
         }, 100);

@@ -99,7 +99,8 @@ class SocketService {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Error al unirse a sala');
+      console.error('Join room failed:', error);
+      throw new Error(error.error || error.message || 'Error al unirse a sala');
     }
   }
 
