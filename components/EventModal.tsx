@@ -46,6 +46,12 @@ export const EventModal: React.FC<EventModalProps> = ({
   const handleConfirm = () => {
     if (onConfirm) {
       const word = selectedTiles.map(t => t.letter).join('');
+      
+      // Validation: if only one tile should be selected, enforce it
+      if (selectedTiles.length === 0) {
+        return; // Button should be disabled anyway
+      }
+      
       onConfirm(word);
     }
   };
@@ -87,7 +93,12 @@ export const EventModal: React.FC<EventModalProps> = ({
             <div className="bg-indigo-50 p-4 rounded-xl border-2 border-indigo-100 mb-4 min-h-[80px] flex items-center justify-center relative">
                {selectedTiles.length === 0 && (
                    <span className="text-indigo-300 font-bold tracking-widest uppercase absolute">
-                       Selecciona fichas...
+                       {title.includes('Zazu') 
+                         ? 'Elige letra a revelar...'
+                         : title.includes('Scuttle') || title.includes('José') || title.includes('Henery') || 
+                           title.includes('Heckle') || title.includes('Flit') 
+                           ? 'Elige UNA letra...' 
+                           : 'Selecciona fichas...'}
                    </span>
                )}
                <div className="flex flex-wrap justify-center gap-1.5 z-10">

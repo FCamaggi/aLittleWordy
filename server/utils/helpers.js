@@ -145,19 +145,19 @@ export function getCardActionDetails(cardId) {
     },
     henery: {
       actionType: 'letter_position',
-      prompt: 'Tu oponente eligió UNA letra. Si está en tu palabra, responde la POSICIÓN de UN ejemplar (ej: posición 3). Si no está, escribe "NO ESTÁ".'
+      prompt: 'Tu oponente eligió UNA letra. Si está en tu palabra, responde la POSICIÓN de UN ejemplar (1=primera letra, 2=segunda...). Si NO está, escribe "NO ESTÁ".'
     },
     zazu: {
       actionType: 'mutual_reveal',
-      prompt: 'Ambos deben revelar UNA letra no revelada. Selecciona una letra de tu palabra que aún no hayas revelado.'
+      prompt: 'Tu oponente reveló una letra de su palabra. Ahora TÚ debes revelar UNA letra NO REVELADA de tu palabra secreta.'
     },
     heckle: {
       actionType: 'count_duplicates',
-      prompt: 'Tu oponente eligió una letra que aparece 2+ veces en SUS fichas. Escribe cuántas veces aparece en TU palabra (número, puede ser 0).'
+      prompt: 'Tu oponente eligió una letra que ÉL tiene 2+ veces. Escribe cuántas veces aparece en TU palabra secreta (número, puede ser 0).'
     },
     scuttle: {
       actionType: 'shared_letter_count',
-      prompt: 'Tu oponente eligió una letra que está en AMBOS sets. Escribe cuántas veces aparece en TU palabra (número).'
+      prompt: 'Tu oponente eligió una letra que está en AMBOS conjuntos. Escribe cuántas veces aparece en TU palabra secreta (número).'
     },
     scrooge: {
       actionType: 'tiles_not_in_word_dynamic',

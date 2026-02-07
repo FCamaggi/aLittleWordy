@@ -849,6 +849,7 @@ export default function App() {
       'heckle',
       'scuttle',
       'flit',
+      'zazu', // Zazu needs player to reveal their own letter first
     ].includes(card.id);
 
     // Cards that cannot be used if opponent already guessed
@@ -864,12 +865,50 @@ export default function App() {
     }
 
     if (needsInput) {
+      // Special handling for Scuttle: only show shared letters
+      let tilesToShow = game.player.tiles;
+      let customMessage = card.description;
+      
+      if (card.id === 'scuttle') {
+        const playerLetters = game.player.tiles.map(t => t.letter);
+        const opponentLetters = game.opponent.tiles.map(t => t.letter);
+        const sharedLetters = [...new Set(playerLetters.filter(l => opponentLetters.includes(l)))];
+        tilesToShow = game.player.tiles.filter(t => sharedLetters.includes(t.letter));
+        
+        if (tilesToShow.length === 0) {
+          showNotification('No hay letras comunes entre los dos conjuntos.');
+          return;
+        }
+      }
+      
+      // Special handling for Zazu: player must reveal from their OWN secret word
+      if (card.id === 'zazu') {
+        customMessage = '⚠️ Primero TÚ revelas: Elige UNA letra NO REVELADA de TU palabra secreta. Luego el rival revelará una de la suya.';
+        // Filter to only unrevealed letters from player's secret word
+        const playerLetters = game.player.secretWord.split('');
+        const unrevealedLetters = playerLetters.filter(l => !game.player.revealedLetters.includes(l));
+        
+        if (unrevealedLetters.length === 0) {
+          showNotification('Ya no tienes letras sin revelar en tu palabra.');
+          return;
+        }
+        
+        // Create tiles from unrevealed letters of secret word
+        tilesToShow = unrevealedLetters.map((letter, idx) => ({
+          id: `zazu-secret-${idx}`,
+          letter: letter,
+          type: ['A', 'E', 'I', 'O', 'U'].includes(letter) ? 'VOWEL' : 'CONSONANT',
+          revealed: false,
+          disabled: false
+        }));
+      }
+      
       setEventModal({
         isOpen: true,
         type: 'input',
         title: `Usar: ${card.name}`,
-        message: card.description,
-        availableTiles: game.player.tiles, // Pass player tiles to modal
+        message: customMessage,
+        availableTiles: tilesToShow,
         onConfirm: (val) => resolveCardAction(card, val),
         onClose: closeEventModal,
       });

@@ -171,7 +171,7 @@ export const CARDS: Card[] = [
     name: 'Henery Hawk',
     flavor: 'Superjugada',
     description:
-      'Elige una letra. Si está, el oponente revela la posición de un solo ejemplar.',
+      'Elige una letra. Si está en la palabra rival, revela la POSICIÓN de un ejemplar (1=primera letra).',
     cost: 3,
     type: 'spicy',
   },
@@ -179,7 +179,7 @@ export const CARDS: Card[] = [
     id: 'zazu',
     name: 'Zazu',
     flavor: 'Dar y recibir',
-    description: 'Ambos revelan una ficha de letra no revelada.',
+    description: 'Primero TÚ revelas una letra no revelada de tu palabra. Luego el rival revela una de la suya.',
     cost: 1,
     type: 'spicy',
   },
@@ -188,7 +188,7 @@ export const CARDS: Card[] = [
     name: 'Heckle and Jeckle',
     flavor: 'Destruir ejemplares',
     description:
-      'Elige una letra que tengas 2+ veces. Oponente dice cuántas veces aparece en su palabra.',
+      'Elige una letra que TENGAS 2+ veces. Oponente dice cuántas veces aparece en su palabra (puede ser 0).',
     cost: 2,
     type: 'spicy',
   },
@@ -197,7 +197,7 @@ export const CARDS: Card[] = [
     name: 'Scuttle',
     flavor: 'Compartamos',
     description:
-      'Elige una letra presente en ambos sets. Se dice cuántas veces aparece en cada palabra.',
+      'Elige UNA letra que esté en TUS fichas Y en las del rival. Ambos dicen cuántas veces aparece en su palabra.',
     cost: 1,
     type: 'spicy',
   },

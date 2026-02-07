@@ -112,6 +112,28 @@ export default function CardActionModal({
       );
     }
 
+    // Show opponent's revealed letter (Zazu)
+    if (cardInput && actionType.includes('mutual_reveal')) {
+      return (
+        <>
+          <div className="mb-3 bg-yellow-900/40 border-2 border-yellow-400 rounded-lg p-4">
+            <p className="text-xs text-yellow-200 mb-2 font-bold uppercase text-center">🎁 El oponente reveló:</p>
+            <p className="text-5xl font-black text-white text-center">
+              {cardInput.toUpperCase()}
+            </p>
+          </div>
+          {secretWord && (
+            <div className="mb-4 bg-green-800/50 border-2 border-green-400 rounded-lg p-3">
+              <p className="text-xs text-green-200 mb-1 font-bold uppercase text-center">📝 Tu palabra secreta:</p>
+              <p className="text-2xl font-black text-white tracking-widest text-center">
+                {secretWord.toUpperCase()}
+              </p>
+            </div>
+          )}
+        </>
+      );
+    }
+
     // Always show player's own secret word if available
     if (secretWord) {
       return (
