@@ -330,8 +330,14 @@ export function setupSocketHandlers(io) {
 
         // Switch turn to the OTHER player (opponent of the card user)
         // The card user already had their turn, now it's the opponent's turn
+        const cardUserIndex = room.players.findIndex(p => p.socketId === pendingAction.usedBy);
         const opponentOfCardUserIndex = cardUserIndex === 0 ? 1 : 0;
         room.gameState.turn = room.players[opponentOfCardUserIndex].socketId;
+
+        console.log('🔄 Turn switched:', {
+          cardUser: room.players[cardUserIndex].name,
+          nextTurn: room.players[opponentOfCardUserIndex].name
+        });
 
         // Clear pending action
         room.gameState.pendingCardAction = undefined;

@@ -466,7 +466,11 @@ export default function App() {
         revealedPositions: prev.opponent.revealedPositions,
       },
       activeCards: room.gameState?.activeCards || room.deck || prev.activeCards,
+      history: room.gameState?.history || prev.history,
+      waitingForOpponentGuess: room.gameState?.waitingForOpponentGuess || false,
     }));
+
+    console.log('✅ Game state updated. History items:', room.gameState?.history?.length || 0);
   };
 
   // --- Effects ---
