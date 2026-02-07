@@ -1,5 +1,5 @@
 import Room from '../models/Room.js';
-import { generateTiles, generateDeck, shuffleArray } from '../utils/helpers.js';
+import { generateTiles, generateDeck, shuffleArray, getCardActionDetails } from '../utils/helpers.js';
 
 export function setupSocketHandlers(io) {
   io.on('connection', (socket) => {
@@ -187,8 +187,10 @@ export function setupSocketHandlers(io) {
     });
 
     // Use card
-    socket.on('use_card', async ({ roomCode, playerIndex, cardId, input }) => {
+    socket.on('use_card', async ({ roomCode, cardId }) => {
       try {
+        console.log('🃏 use_card event:', { roomCode, cardId, socketId: socket.id });
+
         const room = await Room.findOne({ code: roomCode.toUpperCase() });
 
         if (!room) {
@@ -196,34 +198,160 @@ export function setupSocketHandlers(io) {
           return;
         }
 
+        // Find which player is making the request
+        const playerIndex = room.players.findIndex(p => p.socketId === socket.id);
+        
+        if (playerIndex === -1) {
+          socket.emit('error', { message: 'Player not found in room' });
+          return;
+        }
+
         const currentPlayer = room.players[playerIndex];
         const opponentIndex = playerIndex === 0 ? 1 : 0;
         const opponent = room.players[opponentIndex];
 
-        // Find card
+        if (!currentPlayer || !opponent) {
+          socket.emit('error', { message: 'Invalid player index' });
+          return;
+        }
+
+        // Find card in active deck
         const card = room.gameState.activeCards.find(c => c.id === cardId);
         if (!card) {
+          console.error('❌ Card not found:', cardId);
+          console.log('Available cards:', room.gameState.activeCards.map(c => c.id));
           socket.emit('error', { message: 'Card not found' });
           return;
         }
 
-        // Process card logic (simplified - you'll expand this)
+        // Deduct cost from current player
         let cost = typeof card.cost === 'number' ? card.cost : 0;
-        let result = '';
+        
+        // For Scrooge (dynamic cost), calculate based on unrevealed letters
+        if (cardId === 'scrooge') {
+          const unrevealedCount = opponent.tiles.filter(t => !t.revealed).length;
+          cost = unrevealedCount;
+        }
 
-        // Add tokens to opponent
-        opponent.tokens += cost;
+        // Get action details for opponent
+        const { actionType, prompt } = getCardActionDetails(cardId);
 
-        // Switch turn
-        room.gameState.turn = playerIndex === 0 ? 'player2' : 'player1';
+        // Create pending card action
+        room.gameState.pendingCardAction = {
+          cardId: card.id,
+          cardName: card.name,
+          cardFlavor: card.flavor,
+          usedBy: currentPlayer.socketId,
+          targetPlayer: opponent.socketId,
+          actionType,
+          prompt,
+          response: null,
+          timestamp: new Date()
+        };
+
+        // Add to history
         room.gameState.history.unshift(`${currentPlayer.name} usó ${card.name}`);
 
         await room.save();
 
-        io.to(roomCode.toUpperCase()).emit('card_used', { room, result });
+        // Notify both players
+        io.to(roomCode.toUpperCase()).emit('card_used', { 
+          room,
+          cardCost: cost
+        });
+
+        // Specifically notify target player they need to respond
+        io.to(opponent.socketId).emit('card_action_required', {
+          card: {
+            id: card.id,
+            name: card.name,
+            flavor: card.flavor
+          },
+          actionType,
+          prompt
+        });
+
+        console.log('✅ Card action created, waiting for opponent response');
+
       } catch (error) {
         console.error('Error using card:', error);
         socket.emit('error', { message: 'Failed to use card' });
+      }
+    });
+
+    // Respond to card action
+    socket.on('respond_to_card', async ({ roomCode, playerSocketId, response }) => {
+      try {
+        console.log('💬 respond_to_card event:', { roomCode, playerSocketId, response });
+
+        const room = await Room.findOne({ code: roomCode.toUpperCase() });
+
+        if (!room) {
+          socket.emit('error', { message: 'Room not found' });
+          return;
+        }
+
+        if (!room.gameState.pendingCardAction) {
+          socket.emit('error', { message: 'No pending card action' });
+          return;
+        }
+
+        const pendingAction = room.gameState.pendingCardAction;
+
+        // Validate it's the correct player responding
+        if (pendingAction.targetPlayer !== playerSocketId) {
+          socket.emit('error', { message: 'Not your turn to respond' });
+          return;
+        }
+
+        // Store response
+        pendingAction.response = response;
+
+        // Find the card to get its cost
+        const card = room.gameState.activeCards.find(c => c.id === pendingAction.cardId);
+        let cost = typeof card.cost === 'number' ? card.cost : 0;
+
+        // For Scrooge, recalculate cost
+        if (pendingAction.cardId === 'scrooge') {
+          const respondingPlayer = room.players.find(p => p.socketId === playerSocketId);
+          const unrevealedCount = respondingPlayer.tiles.filter(t => !t.revealed).length;
+          cost = unrevealedCount;
+        }
+
+        // Add tokens to responding player (they gave information)
+        const respondingPlayerIndex = room.players.findIndex(p => p.socketId === playerSocketId);
+        room.players[respondingPlayerIndex].tokens += cost;
+
+        // Add response to history
+        const respondingPlayer = room.players[respondingPlayerIndex];
+        room.gameState.history.unshift(
+          `${respondingPlayer.name} respondió: "${response}"`
+        );
+
+        // Switch turn to the player who originally used the card
+        const cardUserIndex = room.players.findIndex(p => p.socketId === pendingAction.usedBy);
+        room.gameState.turn = room.players[cardUserIndex].socketId;
+
+        // Clear pending action
+        room.gameState.pendingCardAction = undefined;
+
+        await room.save();
+
+        // Notify all players
+        io.to(roomCode.toUpperCase()).emit('card_action_completed', {
+          room,
+          cardResult: {
+            cardName: pendingAction.cardName,
+            response,
+            tokensAwarded: cost
+          }
+        });
+
+        console.log('✅ Card action completed');
+
+      } catch (error) {
+        console.error('Error responding to card:', error);
+        socket.emit('error', { message: 'Failed to respond to card' });
       }
     });
 

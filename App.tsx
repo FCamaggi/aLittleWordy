@@ -32,6 +32,7 @@ import { Tile } from './components/Tile';
 import { Card } from './components/Card';
 import { ManualModal } from './components/ManualModal';
 import { EventModal, EventModalProps } from './components/EventModal';
+import CardActionModal from './components/CardActionModal';
 import { MainMenu } from './components/MainMenu';
 import { Lobby } from './components/Lobby';
 
@@ -95,6 +96,15 @@ export default function App() {
   // Event Modal State
   const [eventModal, setEventModal] = useState<Partial<EventModalProps>>({
     isOpen: false,
+  });
+
+  // Card Action Modal State
+  const [cardActionModal, setCardActionModal] = useState({
+    isOpen: false,
+    cardName: '',
+    cardFlavor: '',
+    prompt: '',
+    actionType: '',
   });
 
   // Notifications
@@ -322,6 +332,29 @@ export default function App() {
     socket.on('card_used', (data) => {
       const room = data.room;
       updateGameStateFromRoom(room);
+      showNotification(`Carta usada, esperando respuesta del oponente...`);
+    });
+
+    // Card action required (opponent needs to respond)
+    socket.on('card_action_required', (data) => {
+      console.log('🃏 card_action_required:', data);
+      setCardActionModal({
+        isOpen: true,
+        cardName: data.card.name,
+        cardFlavor: data.card.flavor,
+        prompt: data.prompt,
+        actionType: data.actionType,
+      });
+    });
+
+    // Card action completed
+    socket.on('card_action_completed', (data) => {
+      console.log('✅ card_action_completed:', data);
+      const room = data.room;
+      updateGameStateFromRoom(room);
+      showNotification(
+        `${data.cardResult.cardName}: "${data.cardResult.response}" (+${data.cardResult.tokensAwarded} tokens)`
+      );
     });
 
     // Guess made
@@ -780,6 +813,19 @@ export default function App() {
     setEventModal({ isOpen: false });
   };
 
+  const handleCardResponse = (response: string) => {
+    const socket = socketService.getSocket();
+    if (socket && game.roomCode) {
+      socketService.respondToCard(game.roomCode, socket.id, response);
+      setCardActionModal({ ...cardActionModal, isOpen: false });
+      showNotification('Respuesta enviada');
+    }
+  };
+
+  const closeCardActionModal = () => {
+    setCardActionModal({ ...cardActionModal, isOpen: false });
+  };
+
   const handleCardClick = (card: CardType) => {
     if (game.turn !== 'player' || game.waitingForOpponentGuess) return;
 
@@ -827,11 +873,9 @@ export default function App() {
 
     // Multiplayer mode: send card action to server
     if (game.roomCode && !game.opponent.isBot) {
-      const cardIndex = game.activeCards.findIndex((c) => c.id === card.id);
-      if (cardIndex !== -1) {
-        socketService.useCard(game.roomCode, cardIndex);
-        showNotification(`Usando ${card.name}...`);
-      }
+      // Send card with ID only (server determines playerIndex from socket.id)
+      socketService.useCard(game.roomCode, card.id);
+      showNotification(`Usando ${card.name}...`);
       return;
     }
 
@@ -1738,6 +1782,18 @@ export default function App() {
         onConfirm={eventModal.onConfirm}
         availableTiles={eventModal.availableTiles}
         confirmText={eventModal.confirmText}
+      />
+
+      <CardActionModal
+        isOpen={cardActionModal.isOpen}
+        cardName={cardActionModal.cardName}
+        cardFlavor={cardActionModal.cardFlavor}
+        prompt={cardActionModal.prompt}
+        actionType={cardActionModal.actionType}
+        playerTiles={game.player.tiles.map(t => t.letter)}
+        secretWord={game.player.secretWord}
+        onSubmit={handleCardResponse}
+        onClose={closeCardActionModal}
       />
 
       {notification && (

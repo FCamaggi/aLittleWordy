@@ -97,3 +97,85 @@ export function generateDeck() {
     ...shuffleArray(spicy).slice(0, 4)
   ];
 }
+
+/**
+ * Get card action details for interactive gameplay
+ * Returns { actionType, prompt } for the opponent to respond
+ */
+export function getCardActionDetails(cardId) {
+  const actions = {
+    // Vanilla cards
+    yakky: {
+      actionType: 'build_word',
+      prompt: 'Tu oponente construyó una palabra. Selecciona las letras que NO están en tu palabra secreta.'
+    },
+    woody: {
+      actionType: 'reveal_first_letter',
+      prompt: 'Debes revelar la PRIMERA letra de tu palabra secreta.'
+    },
+    calimero: {
+      actionType: 'compare_length_word',
+      prompt: 'Tu oponente construyó una palabra. Dile si tu palabra es MÁS LARGA, MÁS CORTA o IGUAL.'
+    },
+    jose: {
+      actionType: 'check_letter',
+      prompt: 'Tu oponente eligió una letra. Dile si está o no en tu palabra secreta.'
+    },
+    chilly: {
+      actionType: 'reveal_length',
+      prompt: 'Debes decir cuántas letras tiene tu palabra secreta (longitud exacta).'
+    },
+    woodstock: {
+      actionType: 'reveal_last_letter',
+      prompt: 'Debes revelar la ÚLTIMA letra de tu palabra secreta.'
+    },
+
+    // Spicy cards
+    foghorn: {
+      actionType: 'reveal_vowel',
+      prompt: 'Debes revelar una vocal que aún NO haya sido revelada de tu palabra secreta.'
+    },
+    beaky: {
+      actionType: 'count_vowels',
+      prompt: 'Debes decir cuántas VOCALES tiene tu palabra secreta.'
+    },
+    daffy: {
+      actionType: 'count_consonants',
+      prompt: 'Debes decir cuántas CONSONANTES tiene tu palabra secreta.'
+    },
+    henery: {
+      actionType: 'reveal_letter_position',
+      prompt: 'Tu oponente eligió una letra. Si está en tu palabra, revela EN QUÉ POSICIÓN(ES) aparece.'
+    },
+    zazu: {
+      actionType: 'mutual_reveal',
+      prompt: 'Ambos deben revelar una letra no revelada. Tú primero: selecciona una letra.'
+    },
+    heckle: {
+      actionType: 'count_duplicates',
+      prompt: 'Tu oponente tiene una letra repetida. Dile cuántas veces aparece esa letra en TU palabra.'
+    },
+    scuttle: {
+      actionType: 'shared_letter_count',
+      prompt: 'Tu oponente eligió una letra que está en ambas palabras. Dile cuántas veces aparece en TU palabra.'
+    },
+    scrooge: {
+      actionType: 'dynamic_yakky',
+      prompt: 'Tu oponente construyó una palabra (coste dinámico). Selecciona las letras que NO están en tu palabra secreta.'
+    },
+    flit: {
+      actionType: 'check_rare_letter',
+      prompt: 'Tu oponente eligió una letra rara (Z/J/Q/X/K). Dile si está en tu palabra secreta.'
+    },
+    iago: {
+      actionType: 'rhyme',
+      prompt: 'Debes decir una palabra que RIME con tu palabra secreta (puede ser falsa).'
+    }
+  };
+
+  return actions[cardId] || {
+    actionType: 'generic',
+    prompt: 'Responde a la acción de la carta.'
+  };
+}
+

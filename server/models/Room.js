@@ -62,7 +62,18 @@ const RoomSchema = new mongoose.Schema({
     history: [String],
     winner: String,
     winReason: String,
-    waitingForOpponentGuess: { type: Boolean, default: false }
+    waitingForOpponentGuess: { type: Boolean, default: false },
+    pendingCardAction: {
+      cardId: String,
+      cardName: String,
+      cardFlavor: String,
+      usedBy: String, // socketId who used the card
+      targetPlayer: String, // socketId who must respond
+      actionType: String,
+      prompt: String,
+      response: String,
+      timestamp: Date
+    }
   },
   createdAt: {
     type: Date,

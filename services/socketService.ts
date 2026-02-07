@@ -22,7 +22,15 @@ export interface ClientToServerEvents {
   join_room: (data: { roomCode: string; playerName: string }) => void;
   player_ready: (data: { roomCode: string }) => void;
   submit_word: (data: { roomCode: string; word: string }) => void;
-  use_card: (data: { roomCode: string; cardIndex: number }) => void;
+  use_card: (data: { 
+    roomCode: string; 
+    cardId: string;
+  }) => void;
+  respond_to_card: (data: {
+    roomCode: string;
+    playerSocketId: string;
+    response: string;
+  }) => void;
   guess_word: (data: { roomCode: string; word: string }) => void;
 }
 
@@ -145,8 +153,12 @@ class SocketService {
     this.socket?.emit('submit_word', { roomCode, word });
   }
 
-  useCard(roomCode: string, cardIndex: number) {
-    this.socket?.emit('use_card', { roomCode, cardIndex });
+  useCard(roomCode: string, cardId: string) {
+    this.socket?.emit('use_card', { roomCode, cardId });
+  }
+
+  respondToCard(roomCode: string, playerSocketId: string, response: string) {
+    this.socket?.emit('respond_to_card', { roomCode, playerSocketId, response });
   }
 
   guessWord(roomCode: string, word: string) {
