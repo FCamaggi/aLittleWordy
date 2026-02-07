@@ -352,9 +352,12 @@ export default function App() {
       console.log('✅ card_action_completed:', data);
       const room = data.room;
       updateGameStateFromRoom(room);
-      showNotification(
-        `${data.cardResult.cardName}: "${data.cardResult.response}" (+${data.cardResult.tokensAwarded} tokens)`
-      );
+      
+      if (data.cardResult) {
+        showNotification(
+          `${data.cardResult.cardName}: "${data.cardResult.response}" (+${data.cardResult.tokensAwarded} tokens)`
+        );
+      }
     });
 
     // Guess made
@@ -1649,6 +1652,25 @@ export default function App() {
 
         {/* Main Area */}
         <main className="flex-1 overflow-y-auto p-4 space-y-6">
+          {/* Recordatorio de palabra original del jugador */}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border-2 border-blue-200 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold text-blue-600 uppercase mb-1">
+                  📝 Tu Palabra Secreta
+                </p>
+                <p className="text-2xl font-black text-blue-900 tracking-widest">
+                  {game.player.secretWord.toUpperCase() || '---'}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-slate-500 italic">
+                  (La que formaste originalmente)
+                </p>
+              </div>
+            </div>
+          </div>
+
           <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
             <div className="text-xs font-bold text-slate-400 uppercase mb-2 flex justify-between">
               <span>Fichas de {game.opponent.name}</span>

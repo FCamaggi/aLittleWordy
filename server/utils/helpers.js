@@ -106,70 +106,70 @@ export function getCardActionDetails(cardId) {
   const actions = {
     // Vanilla cards
     yakky: {
-      actionType: 'build_word',
-      prompt: 'Tu oponente construyó una palabra. Selecciona las letras que NO están en tu palabra secreta.'
+      actionType: 'tiles_not_in_word',
+      prompt: 'Tu oponente construyó una palabra. Escribe las LETRAS que NO están en tu palabra secreta (separadas por comas, ej: A, B, C).'
     },
     woody: {
       actionType: 'reveal_first_letter',
-      prompt: 'Debes revelar la PRIMERA letra de tu palabra secreta.'
+      prompt: 'Debes revelar la PRIMERA letra de tu palabra secreta. Selecciónala o escríbela.'
     },
     calimero: {
-      actionType: 'compare_length_word',
-      prompt: 'Tu oponente construyó una palabra. Dile si tu palabra es MÁS LARGA, MÁS CORTA o IGUAL.'
+      actionType: 'compare_length',
+      prompt: 'Tu oponente construyó una palabra. Responde: ¿Tu palabra es MÁS LARGA, MÁS CORTA o IGUAL?'
     },
     jose: {
-      actionType: 'check_letter',
-      prompt: 'Tu oponente eligió una letra. Dile si está o no en tu palabra secreta.'
+      actionType: 'check_single_letter',
+      prompt: 'Tu oponente eligió UNA letra. Responde: ¿Está esta letra en tu palabra? (SÍ o NO)'
     },
     chilly: {
       actionType: 'reveal_length',
-      prompt: 'Debes decir cuántas letras tiene tu palabra secreta (longitud exacta).'
+      prompt: 'Escribe el NÚMERO de letras de tu palabra secreta (longitud exacta).'
     },
     woodstock: {
       actionType: 'reveal_last_letter',
-      prompt: 'Debes revelar la ÚLTIMA letra de tu palabra secreta.'
+      prompt: 'Debes revelar la ÚLTIMA letra de tu palabra secreta. Selecciónala o escríbela.'
     },
 
     // Spicy cards
     foghorn: {
       actionType: 'reveal_vowel',
-      prompt: 'Debes revelar una vocal que aún NO haya sido revelada de tu palabra secreta.'
+      prompt: 'Debes revelar UNA vocal de tu palabra que aún NO haya sido revelada. Si no quedan vocales, escribe "NINGUNA".'
     },
     beaky: {
       actionType: 'count_vowels',
-      prompt: 'Debes decir cuántas VOCALES tiene tu palabra secreta.'
+      prompt: 'Escribe cuántas VOCALES tiene tu palabra secreta (número).'
     },
     daffy: {
       actionType: 'count_consonants',
-      prompt: 'Debes decir cuántas CONSONANTES tiene tu palabra secreta.'
+      prompt: 'Escribe cuántas CONSONANTES tiene tu palabra secreta (número).'
     },
     henery: {
-      actionType: 'reveal_letter_position',
-      prompt: 'Tu oponente eligió una letra. Si está en tu palabra, revela EN QUÉ POSICIÓN(ES) aparece.'
+      actionType: 'letter_position',
+      prompt: 'Tu oponente eligió UNA letra. Si está en tu palabra, responde la POSICIÓN de UN ejemplar (ej: posición 3). Si no está, escribe "NO ESTÁ".'
     },
     zazu: {
       actionType: 'mutual_reveal',
-      prompt: 'Ambos deben revelar una letra no revelada. Tú primero: selecciona una letra.'
+      prompt: 'Ambos deben revelar UNA letra no revelada. Selecciona una letra de tu palabra que aún no hayas revelado.'
     },
     heckle: {
       actionType: 'count_duplicates',
-      prompt: 'Tu oponente tiene una letra repetida. Dile cuántas veces aparece esa letra en TU palabra.'
+      prompt: 'Tu oponente eligió una letra que aparece 2+ veces en SUS fichas. Escribe cuántas veces aparece en TU palabra (número, puede ser 0).'
     },
     scuttle: {
       actionType: 'shared_letter_count',
-      prompt: 'Tu oponente eligió una letra que está en ambas palabras. Dile cuántas veces aparece en TU palabra.'
+      prompt: 'Tu oponente eligió una letra que está en AMBOS sets. Escribe cuántas veces aparece en TU palabra (número).'
     },
     scrooge: {
-      actionType: 'dynamic_yakky',
-      prompt: 'Tu oponente construyó una palabra (coste dinámico). Selecciona las letras que NO están en tu palabra secreta.'
+      actionType: 'tiles_not_in_word_dynamic',
+      prompt: 'Tu oponente construyó una palabra (coste dinámico). Escribe las LETRAS que NO están en tu palabra secreta (separadas por comas).'
     },
     flit: {
       actionType: 'check_rare_letter',
-      prompt: 'Tu oponente eligió una letra rara (Z/J/Q/X/K). Dile si está en tu palabra secreta.'
+      prompt: 'Tu oponente eligió una letra rara (Z, J, Q, X o K). Responde: ¿Está en tu palabra? (SÍ o NO)'
     },
     iago: {
       actionType: 'rhyme',
-      prompt: 'Debes decir una palabra que RIME con tu palabra secreta (puede ser falsa).'
+      prompt: 'Debes decir una palabra que RIME con tu palabra secreta. Puede ser inventada si no existe ninguna.'
     }
   };
 

@@ -250,7 +250,7 @@ export function setupSocketHandlers(io) {
         };
 
         // Add to history
-        room.gameState.history.unshift(`${currentPlayer.name} usó ${card.name}`);
+        room.gameState.history.unshift(`${currentPlayer.name} usó ${card.name} (coste: ${cost} tokens)`);
 
         await room.save();
 
@@ -328,9 +328,10 @@ export function setupSocketHandlers(io) {
           `${respondingPlayer.name} respondió: "${response}"`
         );
 
-        // Switch turn to the player who originally used the card
-        const cardUserIndex = room.players.findIndex(p => p.socketId === pendingAction.usedBy);
-        room.gameState.turn = room.players[cardUserIndex].socketId;
+        // Switch turn to the OTHER player (opponent of the card user)
+        // The card user already had their turn, now it's the opponent's turn
+        const opponentOfCardUserIndex = cardUserIndex === 0 ? 1 : 0;
+        room.gameState.turn = room.players[opponentOfCardUserIndex].socketId;
 
         // Clear pending action
         room.gameState.pendingCardAction = undefined;

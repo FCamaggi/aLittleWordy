@@ -43,6 +43,124 @@ export default function CardActionModal({
     setResponse(''); // Clear text input if selecting from tiles
   };
 
+  // Helper to get quick action buttons based on action type
+  const renderQuickActions = () => {
+    // Yes/No cards
+    if (
+      actionType.includes('check_single_letter') ||
+      actionType.includes('check_rare_letter')
+    ) {
+      return (
+        <div className="mb-4">
+          <p className="text-sm text-gray-300 mb-2">Respuesta rápida:</p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setResponse('SÍ')}
+              className={`flex-1 px-4 py-3 rounded border-2 font-bold transition-all ${
+                response === 'SÍ'
+                  ? 'border-green-500 bg-green-500/20 scale-105'
+                  : 'border-gray-600 bg-gray-700/50 hover:border-green-400'
+              }`}
+            >
+              ✅ SÍ
+            </button>
+            <button
+              onClick={() => setResponse('NO')}
+              className={`flex-1 px-4 py-3 rounded border-2 font-bold transition-all ${
+                response === 'NO'
+                  ? 'border-red-500 bg-red-500/20 scale-105'
+                  : 'border-gray-600 bg-gray-700/50 hover:border-red-400'
+              }`}
+            >
+              ❌ NO
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // Length comparison for Calimero
+    if (actionType.includes('compare_length')) {
+      return (
+        <div className="mb-4">
+          <p className="text-sm text-gray-300 mb-2">Comparar longitud:</p>
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              onClick={() => setResponse('MÁS LARGA')}
+              className={`px-3 py-3 rounded border-2 font-bold text-sm transition-all ${
+                response === 'MÁS LARGA'
+                  ? 'border-blue-500 bg-blue-500/20 scale-105'
+                  : 'border-gray-600 bg-gray-700/50 hover:border-blue-400'
+              }`}
+            >
+              📏 MÁS LARGA
+            </button>
+            <button
+              onClick={() => setResponse('MÁS CORTA')}
+              className={`px-3 py-3 rounded border-2 font-bold text-sm transition-all ${
+                response === 'MÁS CORTA'
+                  ? 'border-orange-500 bg-orange-500/20 scale-105'
+                  : 'border-gray-600 bg-gray-700/50 hover:border-orange-400'
+              }`}
+            >
+              📐 MÁS CORTA
+            </button>
+            <button
+              onClick={() => setResponse('IGUAL')}
+              className={`px-3 py-3 rounded border-2 font-bold text-sm transition-all ${
+                response === 'IGUAL'
+                  ? 'border-green-500 bg-green-500/20 scale-105'
+                  : 'border-gray-600 bg-gray-700/50 hover:border-green-400'
+              }`}
+            >
+              ⚖️ IGUAL
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // "Not found" option for Henery
+    if (actionType.includes('letter_position')) {
+      return (
+        <div className="mb-4">
+          <p className="text-sm text-gray-300 mb-2">Si la letra NO está:</p>
+          <button
+            onClick={() => setResponse('NO ESTÁ')}
+            className={`w-full px-4 py-3 rounded border-2 font-bold transition-all ${
+              response === 'NO ESTÁ'
+                ? 'border-red-500 bg-red-500/20 scale-105'
+                : 'border-gray-600 bg-gray-700/50 hover:border-red-400'
+            }`}
+          >
+            ❌ NO ESTÁ
+          </button>
+        </div>
+      );
+    }
+
+    // "None" option for Foghorn
+    if (actionType.includes('reveal_vowel')) {
+      return (
+        <div className="mb-4">
+          <p className="text-sm text-gray-300 mb-2">Si no quedan vocales:</p>
+          <button
+            onClick={() => setResponse('NINGUNA')}
+            className={`w-full px-4 py-3 rounded border-2 font-bold transition-all ${
+              response === 'NINGUNA'
+                ? 'border-gray-500 bg-gray-500/20 scale-105'
+                : 'border-gray-600 bg-gray-700/50 hover:border-gray-400'
+            }`}
+          >
+            🚫 NINGUNA
+          </button>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
   // Helper to render selectable letters based on action type
   const renderLetterSelection = () => {
     // For actions that need a letter from secret word
@@ -120,6 +238,8 @@ export default function CardActionModal({
         <div className="bg-red-900/30 border border-red-500 rounded-lg p-4 mb-4">
           <p className="text-white text-center font-semibold">{prompt}</p>
         </div>
+
+        {renderQuickActions()}
 
         {renderLetterSelection()}
 
