@@ -69,12 +69,22 @@ export default function CardActionModal({
     // Show opponent's constructed word (Yakky, Scrooge, Calimero)
     if (cardInput && (actionType.includes('tiles_not_in_word') || actionType.includes('compare_length'))) {
       return (
-        <div className="mb-4 bg-blue-900/40 border-2 border-blue-400 rounded-lg p-4">
-          <p className="text-xs text-blue-300 mb-2 font-bold uppercase">Palabra del oponente:</p>
-          <p className="text-3xl font-black text-white tracking-widest text-center">
-            {cardInput.toUpperCase()}
-          </p>
-        </div>
+        <>
+          <div className="mb-3 bg-blue-900/40 border-2 border-blue-400 rounded-lg p-4">
+            <p className="text-xs text-blue-200 mb-2 font-bold uppercase">Palabra del oponente:</p>
+            <p className="text-3xl font-black text-white tracking-widest text-center">
+              {cardInput.toUpperCase()}
+            </p>
+          </div>
+          {secretWord && (
+            <div className="mb-4 bg-green-800/50 border-2 border-green-400 rounded-lg p-3">
+              <p className="text-xs text-green-200 mb-1 font-bold uppercase text-center">📝 Tu palabra secreta:</p>
+              <p className="text-2xl font-black text-white tracking-widest text-center">
+                {secretWord.toUpperCase()}
+              </p>
+            </div>
+          )}
+        </>
       );
     }
 
@@ -83,21 +93,31 @@ export default function CardActionModal({
         actionType.includes('count_duplicates') || actionType.includes('shared_letter_count') || 
         actionType.includes('check_rare_letter'))) {
       return (
-        <div className="mb-4 bg-purple-900/40 border-2 border-purple-400 rounded-lg p-4">
-          <p className="text-xs text-purple-300 mb-2 font-bold uppercase text-center">Letra elegida por el oponente:</p>
-          <p className="text-5xl font-black text-white text-center">
-            {cardInput.toUpperCase()}
-          </p>
-        </div>
+        <>
+          <div className="mb-3 bg-purple-900/40 border-2 border-purple-400 rounded-lg p-4">
+            <p className="text-xs text-purple-200 mb-2 font-bold uppercase text-center">Letra elegida por el oponente:</p>
+            <p className="text-5xl font-black text-white text-center">
+              {cardInput.toUpperCase()}
+            </p>
+          </div>
+          {secretWord && (
+            <div className="mb-4 bg-green-800/50 border-2 border-green-400 rounded-lg p-3">
+              <p className="text-xs text-green-200 mb-1 font-bold uppercase text-center">📝 Tu palabra secreta:</p>
+              <p className="text-2xl font-black text-white tracking-widest text-center">
+                {secretWord.toUpperCase()}
+              </p>
+            </div>
+          )}
+        </>
       );
     }
 
-    // Show player's own secret word for reference (all cards where they need to check their word)
-    if (secretWord && !actionType.includes('tiles_not_in_word')) {
+    // Always show player's own secret word if available
+    if (secretWord) {
       return (
-        <div className="mb-4 bg-green-900/40 border-2 border-green-400 rounded-lg p-4">
-          <p className="text-xs text-green-300 mb-2 font-bold uppercase">Tu palabra secreta:</p>
-          <p className="text-3xl font-black text-white tracking-widest text-center">
+        <div className="mb-4 bg-green-800/50 border-2 border-green-400 rounded-lg p-3">
+          <p className="text-xs text-green-200 mb-1 font-bold uppercase text-center">📝 Tu palabra secreta:</p>
+          <p className="text-2xl font-black text-white tracking-widest text-center">
             {secretWord.toUpperCase()}
           </p>
         </div>
@@ -116,24 +136,24 @@ export default function CardActionModal({
     ) {
       return (
         <div className="mb-4">
-          <p className="text-sm text-gray-300 mb-2">Respuesta rápida:</p>
+          <p className="text-sm text-yellow-200 mb-2 font-semibold">Respuesta rápida:</p>
           <div className="flex gap-2">
             <button
               onClick={() => setResponse('SÍ')}
-              className={`flex-1 px-4 py-3 rounded border-2 font-bold transition-all ${
+              className={`flex-1 px-4 py-3 rounded-lg border-2 font-bold text-lg transition-all ${
                 response === 'SÍ'
-                  ? 'border-green-500 bg-green-500/20 scale-105'
-                  : 'border-gray-600 bg-gray-700/50 hover:border-green-400'
+                  ? 'border-green-400 bg-green-500/30 scale-105 text-white'
+                  : 'border-green-300 bg-green-600/20 hover:border-green-200 text-green-100'
               }`}
             >
               ✅ SÍ
             </button>
             <button
               onClick={() => setResponse('NO')}
-              className={`flex-1 px-4 py-3 rounded border-2 font-bold transition-all ${
+              className={`flex-1 px-4 py-3 rounded-lg border-2 font-bold text-lg transition-all ${
                 response === 'NO'
-                  ? 'border-red-500 bg-red-500/20 scale-105'
-                  : 'border-gray-600 bg-gray-700/50 hover:border-red-400'
+                  ? 'border-red-400 bg-red-500/30 scale-105 text-white'
+                  : 'border-red-300 bg-red-600/20 hover:border-red-200 text-red-100'
               }`}
             >
               ❌ NO
@@ -147,34 +167,34 @@ export default function CardActionModal({
     if (actionType.includes('compare_length')) {
       return (
         <div className="mb-4">
-          <p className="text-sm text-gray-300 mb-2">Comparar longitud:</p>
+          <p className="text-sm text-yellow-200 mb-2 font-semibold">Comparar longitud:</p>
           <div className="grid grid-cols-3 gap-2">
             <button
               onClick={() => setResponse('MÁS LARGA')}
-              className={`px-3 py-3 rounded border-2 font-bold text-sm transition-all ${
+              className={`px-3 py-3 rounded-lg border-2 font-bold text-sm transition-all ${
                 response === 'MÁS LARGA'
-                  ? 'border-blue-500 bg-blue-500/20 scale-105'
-                  : 'border-gray-600 bg-gray-700/50 hover:border-blue-400'
+                  ? 'border-blue-400 bg-blue-500/30 scale-105 text-white'
+                  : 'border-blue-300 bg-blue-600/20 hover:border-blue-200 text-blue-100'
               }`}
             >
               📏 MÁS LARGA
             </button>
             <button
               onClick={() => setResponse('MÁS CORTA')}
-              className={`px-3 py-3 rounded border-2 font-bold text-sm transition-all ${
+              className={`px-3 py-3 rounded-lg border-2 font-bold text-sm transition-all ${
                 response === 'MÁS CORTA'
-                  ? 'border-orange-500 bg-orange-500/20 scale-105'
-                  : 'border-gray-600 bg-gray-700/50 hover:border-orange-400'
+                  ? 'border-orange-400 bg-orange-500/30 scale-105 text-white'
+                  : 'border-orange-300 bg-orange-600/20 hover:border-orange-200 text-orange-100'
               }`}
             >
               📐 MÁS CORTA
             </button>
             <button
               onClick={() => setResponse('IGUAL')}
-              className={`px-3 py-3 rounded border-2 font-bold text-sm transition-all ${
+              className={`px-3 py-3 rounded-lg border-2 font-bold text-sm transition-all ${
                 response === 'IGUAL'
-                  ? 'border-green-500 bg-green-500/20 scale-105'
-                  : 'border-gray-600 bg-gray-700/50 hover:border-green-400'
+                  ? 'border-green-400 bg-green-500/30 scale-105 text-white'
+                  : 'border-green-300 bg-green-600/20 hover:border-green-200 text-green-100'
               }`}
             >
               ⚖️ IGUAL
@@ -188,13 +208,13 @@ export default function CardActionModal({
     if (actionType.includes('letter_position')) {
       return (
         <div className="mb-4">
-          <p className="text-sm text-gray-300 mb-2">Si la letra NO está:</p>
+          <p className="text-sm text-yellow-200 mb-2 font-semibold">Si la letra NO está:</p>
           <button
             onClick={() => setResponse('NO ESTÁ')}
-            className={`w-full px-4 py-3 rounded border-2 font-bold transition-all ${
+            className={`w-full px-4 py-3 rounded-lg border-2 font-bold text-lg transition-all ${
               response === 'NO ESTÁ'
-                ? 'border-red-500 bg-red-500/20 scale-105'
-                : 'border-gray-600 bg-gray-700/50 hover:border-red-400'
+                ? 'border-red-400 bg-red-500/30 scale-105 text-white'
+                : 'border-red-300 bg-red-600/20 hover:border-red-200 text-red-100'
             }`}
           >
             ❌ NO ESTÁ
@@ -207,13 +227,13 @@ export default function CardActionModal({
     if (actionType.includes('reveal_vowel')) {
       return (
         <div className="mb-4">
-          <p className="text-sm text-gray-300 mb-2">Si no quedan vocales:</p>
+          <p className="text-sm text-yellow-200 mb-2 font-semibold">Si no quedan vocales:</p>
           <button
             onClick={() => setResponse('NINGUNA')}
-            className={`w-full px-4 py-3 rounded border-2 font-bold transition-all ${
+            className={`w-full px-4 py-3 rounded-lg border-2 font-bold text-lg transition-all ${
               response === 'NINGUNA'
-                ? 'border-gray-500 bg-gray-500/20 scale-105'
-                : 'border-gray-600 bg-gray-700/50 hover:border-gray-400'
+                ? 'border-yellow-400 bg-yellow-500/30 scale-105 text-white'
+                : 'border-yellow-300 bg-yellow-600/20 hover:border-yellow-200 text-yellow-100'
             }`}
           >
             🚫 NINGUNA
@@ -232,10 +252,10 @@ export default function CardActionModal({
       const opponentWord = cardInput.split('');
       return (
         <div className="mb-4">
-          <p className="text-sm text-yellow-300 mb-2 font-bold">
+          <p className="text-sm text-yellow-200 mb-2 font-bold">
             Selecciona las letras que NO están en tu palabra:
           </p>
-          <div className="flex flex-wrap gap-2 justify-center bg-gray-900/50 p-3 rounded-lg">
+          <div className="flex flex-wrap gap-2 justify-center bg-slate-800/80 p-3 rounded-lg border border-slate-600">
             {opponentWord.map((letter, idx) => (
               <button
                 key={idx}
@@ -269,10 +289,10 @@ export default function CardActionModal({
       const letters = secretWord.split('');
       return (
         <div className="mb-4">
-          <p className="text-sm text-green-300 mb-2 font-bold">
+          <p className="text-sm text-green-200 mb-2 font-bold">
             Selecciona de tu palabra secreta:
           </p>
-          <div className="flex flex-wrap gap-2 justify-center bg-gray-900/50 p-3 rounded-lg">
+          <div className="flex flex-wrap gap-2 justify-center bg-slate-800/80 p-3 rounded-lg border border-slate-600">
             {letters.map((letter, idx) => (
               <button
                 key={idx}
@@ -315,7 +335,7 @@ export default function CardActionModal({
         {renderLetterSelection()}
 
         <div className="mb-4">
-          <p className="text-sm text-gray-300 mb-2">
+          <p className="text-sm text-white mb-2 font-semibold">
             {selectedLetter || selectedLetters.length > 0
               ? 'O escribe otra respuesta:'
               : 'Escribe tu respuesta:'}
@@ -329,7 +349,7 @@ export default function CardActionModal({
               setSelectedLetters([]); // Clear multiple selections
             }}
             placeholder="Tu respuesta..."
-            className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+            className="w-full px-4 py-3 bg-slate-700 border-2 border-slate-500 rounded-lg text-white text-lg placeholder-slate-300 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/50"
             onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
           />
           {selectedLetter && (

@@ -356,8 +356,9 @@ export default function App() {
       updateGameStateFromRoom(room);
       
       if (data.cardResult) {
+        const cardName = data.cardResult.cardName || 'Carta';
         showNotification(
-          `${data.cardResult.cardName}: "${data.cardResult.response}" (+${data.cardResult.tokensAwarded} tokens)`
+          `${cardName}: "${data.cardResult.response}" (+${data.cardResult.tokensAwarded} tokens)`
         );
       }
     });
