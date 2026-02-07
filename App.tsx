@@ -105,6 +105,7 @@ export default function App() {
     cardFlavor: '',
     prompt: '',
     actionType: '',
+    cardInput: '', // Palabra o letra del rival
   });
 
   // Notifications
@@ -344,6 +345,7 @@ export default function App() {
         cardFlavor: data.card.flavor,
         prompt: data.prompt,
         actionType: data.actionType,
+        cardInput: data.cardInput || '', // Palabra o letra del rival
       });
     });
 
@@ -880,8 +882,8 @@ export default function App() {
 
     // Multiplayer mode: send card action to server
     if (game.roomCode && !game.opponent.isBot) {
-      // Send card with ID only (server determines playerIndex from socket.id)
-      socketService.useCard(game.roomCode, card.id);
+      // Send card with ID and optional input (word built or letter chosen)
+      socketService.useCard(game.roomCode, card.id, input);
       showNotification(`Usando ${card.name}...`);
       return;
     }
@@ -1816,6 +1818,7 @@ export default function App() {
         cardFlavor={cardActionModal.cardFlavor}
         prompt={cardActionModal.prompt}
         actionType={cardActionModal.actionType}
+        cardInput={cardActionModal.cardInput}
         playerTiles={game.player.tiles.map(t => t.letter)}
         secretWord={game.player.secretWord}
         onSubmit={handleCardResponse}

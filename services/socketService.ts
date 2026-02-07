@@ -153,8 +153,8 @@ class SocketService {
     this.socket?.emit('submit_word', { roomCode, word });
   }
 
-  useCard(roomCode: string, cardId: string) {
-    this.socket?.emit('use_card', { roomCode, cardId });
+  useCard(roomCode: string, cardId: string, cardInput?: string) {
+    this.socket?.emit('use_card', { roomCode, cardId, cardInput });
   }
 
   respondToCard(roomCode: string, playerSocketId: string, response: string) {

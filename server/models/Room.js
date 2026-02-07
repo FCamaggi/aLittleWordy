@@ -71,6 +71,7 @@ const RoomSchema = new mongoose.Schema({
       targetPlayer: String, // socketId who must respond
       actionType: String,
       prompt: String,
+      cardInput: String, // Word built or letter chosen by card user
       response: String,
       timestamp: Date
     }

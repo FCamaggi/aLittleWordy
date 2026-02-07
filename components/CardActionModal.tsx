@@ -9,6 +9,7 @@ interface CardActionModalProps {
   actionType: string;
   playerTiles?: string[];
   secretWord?: string;
+  cardInput?: string; // Palabra construida o letra elegida por el rival
   onSubmit: (response: string) => void;
   onClose: () => void;
 }
@@ -21,26 +22,89 @@ export default function CardActionModal({
   actionType,
   playerTiles = [],
   secretWord = '',
+  cardInput = '',
   onSubmit,
   onClose,
 }: CardActionModalProps) {
   const [response, setResponse] = useState('');
   const [selectedLetter, setSelectedLetter] = useState('');
+  const [selectedLetters, setSelectedLetters] = useState<string[]>([]); // Para múltiples letras
 
   if (!isOpen) return null;
 
   const handleSubmit = () => {
-    const finalResponse = selectedLetter || response;
+    let finalResponse = '';
+    
+    // Para cartas que requieren múltiples letras (Yakky, Scrooge)
+    if (actionType.includes('tiles_not_in_word') && selectedLetters.length > 0) {
+      finalResponse = selectedLetters.join(', ');
+    } else {
+      finalResponse = selectedLetter || response;
+    }
+    
     if (finalResponse.trim()) {
       onSubmit(finalResponse.trim());
       setResponse('');
       setSelectedLetter('');
+      setSelectedLetters([]);
     }
   };
 
   const handleSelectLetter = (letter: string) => {
     setSelectedLetter(letter);
     setResponse(''); // Clear text input if selecting from tiles
+  };
+
+  const toggleLetterForYakky = (letter: string) => {
+    if (selectedLetters.includes(letter)) {
+      setSelectedLetters(selectedLetters.filter(l => l !== letter));
+    } else {
+      setSelectedLetters([...selectedLetters, letter]);
+    }
+    setResponse(''); // Clear text input
+  };
+
+  // Helper to show contextual information
+  const renderContextInfo = () => {
+    // Show opponent's constructed word (Yakky, Scrooge, Calimero)
+    if (cardInput && (actionType.includes('tiles_not_in_word') || actionType.includes('compare_length'))) {
+      return (
+        <div className="mb-4 bg-blue-900/40 border-2 border-blue-400 rounded-lg p-4">
+          <p className="text-xs text-blue-300 mb-2 font-bold uppercase">Palabra del oponente:</p>
+          <p className="text-3xl font-black text-white tracking-widest text-center">
+            {cardInput.toUpperCase()}
+          </p>
+        </div>
+      );
+    }
+
+    // Show opponent's chosen letter (José, Henery, Heckle, Scuttle, Flit)
+    if (cardInput && (actionType.includes('check_single_letter') || actionType.includes('letter_position') || 
+        actionType.includes('count_duplicates') || actionType.includes('shared_letter_count') || 
+        actionType.includes('check_rare_letter'))) {
+      return (
+        <div className="mb-4 bg-purple-900/40 border-2 border-purple-400 rounded-lg p-4">
+          <p className="text-xs text-purple-300 mb-2 font-bold uppercase text-center">Letra elegida por el oponente:</p>
+          <p className="text-5xl font-black text-white text-center">
+            {cardInput.toUpperCase()}
+          </p>
+        </div>
+      );
+    }
+
+    // Show player's own secret word for reference (all cards where they need to check their word)
+    if (secretWord && !actionType.includes('tiles_not_in_word')) {
+      return (
+        <div className="mb-4 bg-green-900/40 border-2 border-green-400 rounded-lg p-4">
+          <p className="text-xs text-green-300 mb-2 font-bold uppercase">Tu palabra secreta:</p>
+          <p className="text-3xl font-black text-white tracking-widest text-center">
+            {secretWord.toUpperCase()}
+          </p>
+        </div>
+      );
+    }
+
+    return null;
   };
 
   // Helper to get quick action buttons based on action type
@@ -163,58 +227,63 @@ export default function CardActionModal({
 
   // Helper to render selectable letters based on action type
   const renderLetterSelection = () => {
+    // For Yakky/Scrooge: select MULTIPLE letters that are NOT in secret word
+    if (actionType.includes('tiles_not_in_word') && cardInput) {
+      const opponentWord = cardInput.split('');
+      return (
+        <div className="mb-4">
+          <p className="text-sm text-yellow-300 mb-2 font-bold">
+            Selecciona las letras que NO están en tu palabra:
+          </p>
+          <div className="flex flex-wrap gap-2 justify-center bg-gray-900/50 p-3 rounded-lg">
+            {opponentWord.map((letter, idx) => (
+              <button
+                key={idx}
+                onClick={() => toggleLetterForYakky(letter)}
+                className={`px-4 py-3 rounded border-2 font-bold text-xl transition-all ${
+                  selectedLetters.includes(letter)
+                    ? 'border-red-500 bg-red-500/30 scale-110 line-through'
+                    : 'border-white bg-white/20 hover:border-yellow-400'
+                }`}
+              >
+                <span className="text-white">{letter.toUpperCase()}</span>
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-gray-400 mt-2 text-center">
+            {selectedLetters.length} letra(s) seleccionada(s)
+          </p>
+        </div>
+      );
+    }
+
     // For actions that need a letter from secret word
     if (
       actionType.includes('letter') &&
       secretWord &&
       (actionType.includes('first') ||
         actionType.includes('last') ||
-        actionType.includes('specific'))
+        actionType.includes('reveal_vowel') ||
+        actionType.includes('mutual_reveal'))
     ) {
       const letters = secretWord.split('');
       return (
         <div className="mb-4">
-          <p className="text-sm text-gray-300 mb-2">
+          <p className="text-sm text-green-300 mb-2 font-bold">
             Selecciona de tu palabra secreta:
           </p>
-          <div className="flex flex-wrap gap-2 justify-center">
+          <div className="flex flex-wrap gap-2 justify-center bg-gray-900/50 p-3 rounded-lg">
             {letters.map((letter, idx) => (
               <button
                 key={idx}
                 onClick={() => handleSelectLetter(letter)}
-                className={`px-4 py-2 rounded border-2 transition-all ${
+                className={`px-4 py-3 rounded border-2 font-bold text-xl transition-all ${
                   selectedLetter === letter && idx === letters.indexOf(letter)
-                    ? 'border-blue-500 bg-blue-500/20 scale-110'
-                    : 'border-gray-600 bg-gray-700/50 hover:border-gray-400'
+                    ? 'border-green-500 bg-green-500/30 scale-110'
+                    : 'border-white bg-white/20 hover:border-green-400'
                 }`}
               >
-                {letter.toUpperCase()}
-              </button>
-            ))}
-          </div>
-        </div>
-      );
-    }
-
-    // For actions that need any letter
-    if (playerTiles.length > 0 && actionType.includes('tile')) {
-      return (
-        <div className="mb-4">
-          <p className="text-sm text-gray-300 mb-2">
-            Selecciona una de tus letras:
-          </p>
-          <div className="flex flex-wrap gap-2 justify-center">
-            {playerTiles.map((letter, idx) => (
-              <button
-                key={idx}
-                onClick={() => handleSelectLetter(letter)}
-                className={`px-4 py-2 rounded border-2 transition-all ${
-                  selectedLetter === letter
-                    ? 'border-blue-500 bg-blue-500/20 scale-110'
-                    : 'border-gray-600 bg-gray-700/50 hover:border-gray-400'
-                }`}
-              >
-                {letter.toUpperCase()}
+                <span className="text-white">{letter.toUpperCase()}</span>
               </button>
             ))}
           </div>
@@ -239,13 +308,15 @@ export default function CardActionModal({
           <p className="text-white text-center font-semibold">{prompt}</p>
         </div>
 
+        {renderContextInfo()}
+
         {renderQuickActions()}
 
         {renderLetterSelection()}
 
         <div className="mb-4">
           <p className="text-sm text-gray-300 mb-2">
-            {selectedLetter
+            {selectedLetter || selectedLetters.length > 0
               ? 'O escribe otra respuesta:'
               : 'Escribe tu respuesta:'}
           </p>
@@ -255,6 +326,7 @@ export default function CardActionModal({
             onChange={(e) => {
               setResponse(e.target.value);
               setSelectedLetter(''); // Clear selection if typing
+              setSelectedLetters([]); // Clear multiple selections
             }}
             placeholder="Tu respuesta..."
             className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
@@ -265,12 +337,17 @@ export default function CardActionModal({
               Letra seleccionada: {selectedLetter.toUpperCase()}
             </p>
           )}
+          {selectedLetters.length > 0 && (
+            <p className="text-xs text-red-400 mt-1">
+              Letras tachadas: {selectedLetters.join(', ').toUpperCase()}
+            </p>
+          )}
         </div>
 
         <div className="flex gap-3">
           <Button
             onClick={handleSubmit}
-            disabled={!response.trim() && !selectedLetter}
+            disabled={!response.trim() && !selectedLetter && selectedLetters.length === 0}
             className="flex-1"
           >
             ✅ Enviar Respuesta

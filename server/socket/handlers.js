@@ -187,9 +187,9 @@ export function setupSocketHandlers(io) {
     });
 
     // Use card
-    socket.on('use_card', async ({ roomCode, cardId }) => {
+    socket.on('use_card', async ({ roomCode, cardId, cardInput }) => {
       try {
-        console.log('🃏 use_card event:', { roomCode, cardId, socketId: socket.id });
+        console.log('🃏 use_card event:', { roomCode, cardId, cardInput, socketId: socket.id });
 
         const room = await Room.findOne({ code: roomCode.toUpperCase() });
 
@@ -245,6 +245,7 @@ export function setupSocketHandlers(io) {
           targetPlayer: opponent.socketId,
           actionType,
           prompt,
+          cardInput: cardInput || null, // Store user's input (word built or letter chosen)
           response: null,
           timestamp: new Date()
         };
@@ -268,7 +269,8 @@ export function setupSocketHandlers(io) {
             flavor: card.flavor
           },
           actionType,
-          prompt
+          prompt,
+          cardInput: cardInput || null // Send the user's input to opponent
         });
 
         console.log('✅ Card action created, waiting for opponent response');
